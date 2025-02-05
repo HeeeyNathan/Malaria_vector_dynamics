@@ -1,4 +1,4 @@
-#==================== Administrative Boundries =================== 
+#==================== Administrative Boundries ===================
 #====== Load packages ======
 library(rgeoboundaries)
 library(ggplot2)
@@ -74,14 +74,12 @@ cat("\014")
 # Clear mind :)
 
 
-#==================== Open street map =================== 
+#==================== Open street map ===================
 #====== Load packages ======
 library(osmdata)
 library(ggplot2)
 library(ggmap)
 library(leaflet)
-
-register_google(key = "AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc")
 
 #====== Available features ======
 available_features()
@@ -92,7 +90,7 @@ Vilnius_boundary <- getbb("Vilnius")
 Vilnius_boundary
 
 #====== Create overpass query ======
-Vilnius_boundary |> 
+Vilnius_boundary |>
   opq()
 
 #====== Retrieve osmdata object ======
@@ -186,7 +184,7 @@ graphics.off()
 cat("\014")
 # Clear mind :)
 
-#==================== Temperature =================== 
+#==================== Temperature ===================
 #====== Load packages ======
 library(raster)
 library(geodata)
@@ -314,7 +312,7 @@ gc()
 # Clear mind :)
 
 
-#==================== Elevation =================== 
+#==================== Elevation ===================
 #====== Load packages ======
 library(elevatr)
 library(kableExtra)
@@ -357,7 +355,7 @@ p_unload(all)
 graphics.off()
 cat("\014")
 # Clear mind :)
-#==================== Rainfall =================== 
+#==================== Rainfall ===================
 #====== Load packages ======
 library(nasapower)
 library(dplyr)
@@ -415,7 +413,7 @@ ggplot() +
     title = "Rainfall in inches",
     fill = "Annual Rainfall",
     subtitle = "Annual rainfall in Lithuania"
-  ) + 
+  ) +
   labs(x = "Longitude", y = "Latitude")
 
 # Creating maps of monthly rainfall
@@ -434,7 +432,7 @@ graphics.off()
 cat("\014")
 # Clear mind :)
 
-#==================== Humidity =================== 
+#==================== Humidity ===================
 #====== Load packages ======
 library(nasapower)
 library(dplyr)
@@ -492,7 +490,7 @@ ggplot() +
     title = "Relative humidity",
     fill = "Humidity",
     subtitle = "Annual relative humidity in Lithuania"
-  ) + 
+  ) +
   labs(x = "Longitude", y = "Latitude")
 
 # Getting map for Lithunia
@@ -543,7 +541,7 @@ graphics.off()
 cat("\014")
 # Clear mind :)
 
-#==================== Malaria =================== 
+#==================== Malaria ===================
 #====== Load packages ======
 library(malariaAtlas)
 library(ggplot2)

@@ -1,6 +1,6 @@
 #==================== RScript for analysis of macroinvertebrate biomonitoring data from Lithuania
-#==================== Start =================== 
-#==================== Load packages =================== 
+#==================== Start ===================
+#==================== Load packages ===================
 
 # Load packages
 library(arm)
@@ -43,11 +43,11 @@ library(ggfigdone)
 source("Additional functions/HighstatLibV11.R")
 data("worldHiresMapEnv")
 
-#==================== Import data =================== 
+#==================== Import data ===================
 
 # Import the data
-df <- as_tibble(read.csv("Data/Bio_Env_data_03.12.2024.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE)) |> 
-  clean_names() |> 
+df <- as_tibble(read.csv("Data/Bio_Env_data_03.12.2024.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE)) |>
+  clean_names() |>
   filter(year >= 2013 & year <= 2022) |> # Remove years less than 2013 or greater than 2022 (when looking at lakes and rivers combined)
   # filter(waterbody_type == "lake") |> # keep data from rivers only
   # filter(waterbody_type == "river") |> # keep data from lakes only
@@ -67,7 +67,7 @@ df <- as_tibble(read.csv("Data/Bio_Env_data_03.12.2024.csv", h = T, sep = ",", s
          state            = factor(state, levels = c("A", "HM", "N"),
                                           labels = c("A", "HM", "N"),
                                           ordered = F), # make state a factor
-         eqc              = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"), 
+         eqc              = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                         labels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                         ordered = F), # make EQC a factor
          waterbody_name   = factor(waterbody_name), # make waterbody_name a factor
@@ -85,15 +85,15 @@ df <- as.data.frame(df)
 
 glimpse(df)
 
-# We have 2089 observations, each a unique site-year sampling survey of 
-# macroinvertebrates in Lithuanian freshwaters (lakes and riverS). 
+# We have 2089 observations, each a unique site-year sampling survey of
+# macroinvertebrates in Lithuanian freshwaters (lakes and riverS).
 # 'Ecological quality' is continuous (ratio) variable of ecological quality (0 to 1)
 
 # Any missing values
 colSums(is.na(df[, c("vec_abund", "eqr", "ppt", "q", "tmax", "tmin", "doy", "year")]))
 # no missing values
 
-#==================== Coding issues =================== 
+#==================== Coding issues ===================
 
 # Data coding issues
 LongLatToUTM <- function(x,y,zone){
@@ -111,10 +111,10 @@ df$Yutm <- xy[,3]
 df$Xkm <- df$Xutm / 1000 # covert metres to KM
 df$Ykm <- df$Yutm / 1000 # covert metres to KM
 
-#==================== House keeping =================== 
+#==================== House keeping ===================
 
 # How many observations do we have per year?
-table(df$fyear) 
+table(df$fyear)
 # slightly less observations in 2017, 2018, 2019
 
 # How many observations do we have per location x year?
@@ -124,38 +124,37 @@ print(obvs <- cbind(obvs, total = rowSums(obvs)))
 # how many sites do we have in total?
 NROW(unique(df$site_id))
 
-#==================== Spatial distribution of sites =================== 
+#==================== Spatial distribution of sites ===================
 
 # Spatial position of the sites
-xyplot(latitude ~ longitude, 
+xyplot(latitude ~ longitude,
        aspect = "fill",
        data = df)
 
 range(df$longitude, df$latitude)
 MyCex <- 2 * sqrt(df$vec_abund + 1) / 10
-register_google(key = "AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc")
-glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57), 
-                  maptype = "terrain")    
+glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57),
+                  maptype = "terrain")
 p <- ggmap(glgmap)
-p <- p + geom_point(aes(longitude, 
-                        latitude), 
-                    pch = 19, 
-                    size = MyCex, 
+p <- p + geom_point(aes(longitude,
+                        latitude),
+                    pch = 19,
+                    size = MyCex,
                     col = "red",
-                    data = df) 
-p <- p + xlab("Longitude") + ylab("Latitude")  
+                    data = df)
+p <- p + xlab("Longitude") + ylab("Latitude")
 p <- p + theme(text = element_text(size=15))
 p
 
 # And by year
 p <- ggmap(glgmap)
-p <- p + geom_point(aes(longitude, 
-                        latitude), 
-                    pch = 19, 
-                    size = MyCex, 
+p <- p + geom_point(aes(longitude,
+                        latitude),
+                    pch = 19,
+                    size = MyCex,
                     col = "red",
-                    data = df) 
-p <- p + xlab("Longitude") + ylab("Latitude")  
+                    data = df)
+p <- p + xlab("Longitude") + ylab("Latitude")
 p <- p + theme(text = element_text(size=15))
 p <- p + facet_wrap( ~ fyear)
 p # Some 2018 misery?
@@ -163,7 +162,7 @@ p # Some 2018 misery?
 # ggsave("Plots/Vector_abundance.png", plot = p, width = 8, height = 8, units = "in", dpi = 900, device = "png", bg = NA)
 
 
-#==================== Game plan =================== 
+#==================== Game plan ===================
 
 # The 7 steps to fitting a GLM are:
 
@@ -175,16 +174,16 @@ p # Some 2018 misery?
 # 6. Interpret and present model output
 # 7. Visualise the results
 
-#==================== State the question =================== 
+#==================== State the question ===================
 
 # The aim of this study is to determine whether vector abundance
 # is positively correlated with lower ecological quality / water quality:
 
-#==================== Perform exploration =================== 
+#==================== Perform exploration ===================
 
 # Outliers
-df |> 
-  dplyr::select(vec_abund, eqr, ppt, q, tmax, tmin, doy, year) |> 
+df |>
+  dplyr::select(vec_abund, eqr, ppt, q, tmax, tmin, doy, year) |>
   Mydotplot()
 
 # Check individual plots
@@ -199,10 +198,10 @@ My_theme <- theme(panel.background = element_blank(),
                   legend.position = "none")
 
 # Then plot
-df |> 
-  # filter(vec_abund <= 300) |> 
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = eqr)) +
-  geom_smooth(method = "gam") + 
+  geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
        x = "Ecological quality") +
   geom_jitter(shape = 19, size = 3.5, height = 0.5,
@@ -211,9 +210,9 @@ df |>
   My_theme
 
 df |>
-  # filter(vec_abund <= 300) |> 
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = ppt)) +
-  geom_smooth(method = "gam") + 
+  geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
        x = "Precipitation") +
   geom_jitter(shape = 19, size = 3.5, height = 0.5,
@@ -222,9 +221,9 @@ df |>
   My_theme
 
 df |>
-  # filter(vec_abund <= 300) |> 
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = q)) +
-  geom_smooth(method = "gam") + 
+  geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
        x = "Discharge") +
   geom_jitter(shape = 19, size = 3.5, height = 0.5,
@@ -233,9 +232,9 @@ df |>
   My_theme
 
 df |>
-  # filter(vec_abund <= 300) |> 
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = tmax)) +
-  geom_smooth(method = "gam") + 
+  geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
        x = "Maximum temperature") +
   geom_jitter(shape = 19, size = 3.5, height = 0.5,
@@ -244,7 +243,7 @@ df |>
   My_theme
 
 df |>
-  # filter(vec_abund <= 300) |> 
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = tmin)) +
   labs(y = "Vector abundance",
        x = "Minimum temperature") +
@@ -254,9 +253,9 @@ df |>
   My_theme
 
 df |>
-  # filter(vec_abund <= 300) |> 
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = ws)) +
-  geom_smooth(method = "gam") + 
+  geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
        x = "Wind speed") +
   geom_jitter(shape = 19, size = 3.5, height = 0.5,
@@ -265,9 +264,9 @@ df |>
   My_theme
 
 df |>
-  # filter(vec_abund <= 300) |> 
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = year)) +
-  geom_smooth(method = "gam") + 
+  geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
        x = "Time") +
   geom_jitter(shape = 19, size = 3.5, height = 0.5,
@@ -277,9 +276,9 @@ df |>
   My_theme
 
 df |>
-  # filter(vec_abund <= 300) |> 
+  # filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = doy)) +
-  geom_smooth(method = "gam") + 
+  geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
        x = "Day of year") +
   geom_jitter(shape = 19, size = 3.5, height = 0.5,
@@ -290,8 +289,8 @@ df |>
 
 # NORMALITY AND HOMOGENEITY OF DEPENDENT VARIABLE
 # Frequency polygon plot
-df |> 
-  # filter(vec_abund <= 300) |> 
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot(aes(vec_abund)) +
   geom_freqpoly(bins = 15) +
   labs(x = "Vector abundance",
@@ -300,8 +299,8 @@ df |>
 # High number of zeros and count positively skewed
 # ZEROS IN THE RESPONSE VARIABLE
 
-df |> 
-  # filter(vec_abund <= 300) |> 
+df |>
+  # filter(vec_abund <= 300) |>
   summarise(percentage_zero = sum(vec_abund == 0) / n() * 100)
 # 64% zeros - too many?
 # Need to fit a model then simulate from it to be sure
@@ -309,101 +308,101 @@ df |>
 
 # COLLINEARITY
 
-df |> 
-  # filter(vec_abund <= 300) |> 
-  ggpairs(columns = c("eqr", "ppt", "q", "tmax", "tmin", "ws", "doy", "year"), 
-          aes(alpha = 0.8), lower = list(continuous = "smooth_loess", 
+df |>
+  # filter(vec_abund <= 300) |>
+  ggpairs(columns = c("eqr", "ppt", "q", "tmax", "tmin", "ws", "doy", "year"),
+          aes(alpha = 0.8), lower = list(continuous = "smooth_loess",
           combo = wrap("facethist", binwidth = 5))) + My_theme
 
-df |> 
-  # filter(vec_abund <= 300) |> 
-  dplyr::select(eqr, ppt, q, tmax, tmin, ws, year, doy) |> 
+df |>
+  # filter(vec_abund <= 300) |>
+  dplyr::select(eqr, ppt, q, tmax, tmin, ws, year, doy) |>
   corvif()
 
 # Perhaps tmin and q can cause some trouble
 
-df |> 
-  # filter(vec_abund <= 300) |> 
-  dplyr::select(eqr, ppt, tmax, ws, year, doy) |> 
+df |>
+  # filter(vec_abund <= 300) |>
+  dplyr::select(eqr, ppt, tmax, ws, year, doy) |>
   corvif()
 
 # RELATIONSHIPS
 
 # Plot figure
 grid.arrange(
-df |> 
-  # filter(vec_abund <= 300) |> 
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = eqr, y = vec_abund_pa), alpha = 0.5) +
   geom_smooth(aes(x = eqr, y = vec_abund_pa), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = eqr, y = vec_abund_pa), method = 'gam', se = T, col = "blue")+
   labs(x = "Ecological quality", y = "Vector presence/absence") +
-  My_theme, 
-  
-df |> 
-  # filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = eqr, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = eqr, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = eqr, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Ecological quality", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  # filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = ppt, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = ppt, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = ppt, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Precipitation", y = "Vector abundance") +
-  My_theme,  
+  My_theme,
 
-df |> 
-  # filter(vec_abund <= 300) |> 
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = tmax, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = tmax, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = tmax, y = vec_abund), method = 'gam', se = T, col = "blue") +
   labs(x = "Maximum temperature", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  # filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = ws, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = ws, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = ws, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Wind speed", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  # filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = year, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = year, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = year, y = vec_abund), method = 'gam', se = T, col = "blue")+
   scale_x_continuous(breaks = 2013:2022, limits = c(2013, 2022)) +
   labs(x = "Time", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  # filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot(aes(x = fyear, y = vec_abund, fill = fyear)) +
   geom_point(alpha = 0.5) +
-  geom_boxplot(alpha = 0.5) + 
+  geom_boxplot(alpha = 0.5) +
   labs(x = "Time", y = "Vector abundance") +
   scale_x_discrete(breaks = 2013:2022, limits = as.character(2013:2022)) +
-  My_theme, 
+  My_theme,
 
-df |> 
-  # filter(vec_abund <= 300) |> 
+df |>
+  # filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = doy, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = doy, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = doy, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Day of Year", y = "Vector abundance") +
-  My_theme, 
-  
+  My_theme,
+
 nrow = 4)
 
 # Potentially a weakly positive effect of ecological quality on vector abundance, but also a lot of zeros
@@ -412,9 +411,9 @@ nrow = 4)
 # What is the source of these zeros?
 # Real zeros or should some be positive counts?
 
-#==================== Standardize data =================== 
+#==================== Standardize data ===================
 
-df <- df |> 
+df <- df |>
   mutate(
     eqr.std    = MyStd(eqr),
     ppt.std    = MyStd(ppt),
@@ -426,7 +425,7 @@ df <- df |>
     doy.std    = MyStd(doy)
 )
 
-#==================== General INLA settings =================== 
+#==================== General INLA settings ===================
 
 #' We define some common settings for INLA.
 MyControlCompute  <- list(config = TRUE,    #' Allow for posterior simulation
@@ -437,11 +436,11 @@ MyControlPredictor  <- list(compute = TRUE, #' Calculate fitted values
                             link = 1)       #' Predict on the scale of the response variable.
 
 
-#==================== Dataset cleanup =================== 
+#==================== Dataset cleanup ===================
 # Drop columns with any NA values
 df <- df[, colSums(is.na(df)) == 0]
 
-#==================== Start of analysis =================== 
+#==================== Start of analysis ===================
 #========== Poisson GLM ==========
 # Fit a Poisson GLM and assess whether there is overdispersion.
 Poi <- inla(vec_abund ~ eqr.std + ppt.std + tmax.std + waterbody_type,
@@ -634,8 +633,8 @@ hist(D,
 # D. Zero inflation?       ==> ZIP / ZAP
 # E. Large variance?       ==> NB or Generalized Poisson
 # F. Correlation?          ==> GLMM
-# G. Non-linear patterns   ==> GAM 
-# H. Wrong link function   ==> Change it 
+# G. Non-linear patterns   ==> GAM
+# H. Wrong link function   ==> Change it
 
 # Task is to find the culprit. If you pick the wrong one,
 # then you may end up with biased parameters.
@@ -661,10 +660,10 @@ Lithuania.shp <- geoboundaries("Lithuania")
 LithuaniaPoly <- st_transform(Lithuania.shp, crs = 4326)
 
 # Plot the map
-plot(st_geometry(LithuaniaPoly), 
-     col = "white", 
-     border = "black", 
-     xlim = c(21, 27), 
+plot(st_geometry(LithuaniaPoly),
+     col = "white",
+     border = "black",
+     xlim = c(21, 27),
      ylim = c(53, 57),
      main = "Lithuania Map with Points")
 # Overlay points on the map
@@ -701,7 +700,7 @@ BufferSP@proj4string <- LithuaniaSP@proj4string
 
 # Plot coastline and selected area
 par(mfrow = c(2,2), mar = c(5,5,2,2))
-plot(LithuaniaSP, 
+plot(LithuaniaSP,
      main = "Lithuania",
      axes = TRUE,
      ylim = c(53,57),
@@ -712,7 +711,7 @@ points(df$longitude,
        col = 2)
 text(x = 20 ,y = 56.5,"A", cex = 1.5)
 
-plot(LithuaniaSP, 
+plot(LithuaniaSP,
      main = "Selected area",
      axes = TRUE,
      ylim = c(53,57),
@@ -735,22 +734,22 @@ text(x = 20 ,y = 56.5,"C", cex = 1.5)
 # Make the borders less detailed
 my.tol <- 0.1
 my.area <- 0.1
-LithuaniaSP.smooth <- thinnedSpatialPoly(LithuaniaSP, 
-                                         tolerance = my.tol, 
-                                         minarea = my.area, 
-                                         topologyPreserve = TRUE, 
+LithuaniaSP.smooth <- thinnedSpatialPoly(LithuaniaSP,
+                                         tolerance = my.tol,
+                                         minarea = my.area,
+                                         topologyPreserve = TRUE,
                                          avoidGEOS = FALSE)
-BufferSP.smooth <- thinnedSpatialPoly(BufferSP, 
-                                      tolerance = my.tol, 
-                                      minarea = my.area, 
-                                      topologyPreserve = TRUE, 
+BufferSP.smooth <- thinnedSpatialPoly(BufferSP,
+                                      tolerance = my.tol,
+                                      minarea = my.area,
+                                      topologyPreserve = TRUE,
                                       avoidGEOS = FALSE)
 
 Lithuania.UTM = spTransform(LithuaniaSP, CRS("+proj=utm +zone=34 +north ellps=WGS84 +datum=WGS84"))
 Buffer.UTM = spTransform(BufferSP, CRS("+proj=utm +zone=34 +north ellps=WGS84 +datum=WGS84"))
 
-plot(Lithuania.UTM, 
-     axes = TRUE, 
+plot(Lithuania.UTM,
+     axes = TRUE,
      main = "Smoothed Lithuania",
      xlab = "X",
      ylab = "Y")
@@ -766,41 +765,41 @@ text(x = 20 ,y = 56.5, "D", cex = 1.5)
 Loc <- as.matrix(df[,c("Xutm", "Yutm")])
 D <- dist(Loc)
 par(mfrow = c(1,2), mar = c(5,5,2,2), cex.lab = 1.5)
-hist(D / 1000, 
+hist(D / 1000,
      freq = TRUE,
-     main = "", 
+     main = "",
      xlab = "Distance between sites (km)",
      ylab = "Frequency")
 
-plot(x = sort(D) / 1000, 
-     y = (1:length(D))/length(D), 
+plot(x = sort(D) / 1000,
+     y = (1:length(D))/length(D),
      type = "l",
      xlab = "Distance between sites (km)",
      ylab = "Cumulative proportion")
-# Most site pairs have distances between them clustered between 100 and 200 km, 
+# Most site pairs have distances between them clustered between 100 and 200 km,
 # which is the core of your distance distribution.
 
-# The cumulative plot shows that almost all sites are within 300 km of each other, 
+# The cumulative plot shows that almost all sites are within 300 km of each other,
 # with the vast majority within 200 km.
-RangeGuess <- 50 * 1000 
+RangeGuess <- 50 * 1000
 # What is the distance for which we would expect dependency? 75km?
 # The smaller this value the better...but the longer the computing time
 
-# When determining a range guess for MaxEdge in a spatial model, the idea is to 
-# align this with the scale over which spatial correlation might occur due to dispersal. 
-# Based on the dispersal information of dipteran insects (which generally disperse within 
-# 2–50 km but could be carried farther by wind), I suggested using 50–100 km as a range guess 
-# for MaxEdge. This would allow the model to capture the relevant spatial structures created 
+# When determining a range guess for MaxEdge in a spatial model, the idea is to
+# align this with the scale over which spatial correlation might occur due to dispersal.
+# Based on the dispersal information of dipteran insects (which generally disperse within
+# 2–50 km but could be carried farther by wind), I suggested using 50–100 km as a range guess
+# for MaxEdge. This would allow the model to capture the relevant spatial structures created
 # by dispersal over this range, while also considering the distances between the sites.
 # Recommended settings:
 MaxEdge    <- RangeGuess / 5
 
-# The convex option puts the boundary of the innerpart closer to the points. 
+# The convex option puts the boundary of the innerpart closer to the points.
 # Saves some computing time but maybe not use it for a paper.
 ConvHull   <- inla.nonconvex.hull(Loc, convex = 15 * 1000)
 mesh1      <- inla.mesh.2d(loc = Loc,
                            boundary = ConvHull,
-                           max.edge = c(1, 5) * MaxEdge, 
+                           max.edge = c(1, 5) * MaxEdge,
                            cutoff  = MaxEdge / 5)
 
 par(mfrow = c(1, 1))
@@ -813,7 +812,7 @@ mesh1$n
 Boundary <- inla.sp2segment(Buffer.UTM)
 mesh2  <- inla.mesh.2d(loc = Loc,
                        boundary = Boundary,
-                       max.edge = c(1, 5) * MaxEdge, 
+                       max.edge = c(1, 5) * MaxEdge,
                        cutoff  = MaxEdge / 5)
 plot(mesh2)
 points(Loc, pch = 16)
@@ -823,7 +822,7 @@ mesh2$n
 LT_Boundary <- inla.sp2segment(Lithuania.UTM)
 mesh3  <- inla.mesh.2d(loc = Loc,
                        boundary = LT_Boundary,
-                       max.edge = c(1, 5) * MaxEdge, 
+                       max.edge = c(1, 5) * MaxEdge,
                        cutoff  = MaxEdge / 5)
 plot(mesh3)
 points(Loc, pch = 16)
@@ -882,7 +881,7 @@ plot(Land3)
 #========== Spatial analysis ==========
 # lets start doing some spatial things! Yay!
 # Define the weighting factors a_ik (also called the projector matrix).
-# The sigma parameter represents the marginal standard deviation of the spatial random field. 
+# The sigma parameter represents the marginal standard deviation of the spatial random field.
 # It controls the variability of the spatial process—essentially, how much variation is explained by the spatial random field.
 plot(mesh1)
 plot(mesh2)
@@ -899,22 +898,22 @@ A3 <- inla.spde.make.A(mesh3, loc = Loc)
 # of smoothing that the spatial random field will do.
 # The larger it is, the smoother the spatial random field.
 # It allows to avoid overfitting.
-spde1 <- inla.spde2.pcmatern(mesh1, 
-                             prior.range = c(50 * 1000 , 0.5), 
+spde1 <- inla.spde2.pcmatern(mesh1,
+                             prior.range = c(50 * 1000 , 0.5),
                              prior.sigma = c(1.5, 0.01))
-                             # prior.range = c(50 * 1000 , 0.01), 
+                             # prior.range = c(50 * 1000 , 0.01),
                              # prior.sigma = c(1.5, 0.01))  This was the first attempt
 
-spde2 <- inla.spde2.pcmatern(mesh2, 
-                             prior.range = c(50 * 1000, 0.5), 
+spde2 <- inla.spde2.pcmatern(mesh2,
+                             prior.range = c(50 * 1000, 0.5),
                              prior.sigma = c(1.5, 0.01))
-                             # prior.range = c(50 * 1000, 0.01), 
+                             # prior.range = c(50 * 1000, 0.01),
                              # prior.sigma = c(1.5, 0.01)) This was the first attempt
 
-spde3 <- inla.spde2.pcmatern(mesh3, 
-                             prior.range = c(50 * 1000, 0.5), 
+spde3 <- inla.spde2.pcmatern(mesh3,
+                             prior.range = c(50 * 1000, 0.5),
                              prior.sigma = c(1.5, 0.01))
-                             # prior.range = c(50 * 1000, 0.01), 
+                             # prior.range = c(50 * 1000, 0.01),
                              # prior.sigma = c(1.5, 0.01)) This was the first attempt
 
 # We used a simple glm to get some feeling about sensible values
@@ -922,7 +921,7 @@ spde3 <- inla.spde2.pcmatern(mesh3,
 range(df$vec_abund)
 # P(Range < 50 km ) = 0.05
 # P(sigma > ) = 0.05
-# SB = exp(u_i) 
+# SB = exp(u_i)
 # some u_i have to be as large as 13.496 to cover 1360
 # If u_i ~ N(0, sigma_u^2) then it is unlikley that sigma_u > 1.5
 #P(sigma > 1.5) = 0.05
@@ -935,7 +934,7 @@ w2.index <- inla.spde.make.index(name = 'w', n.spde  = spde2$n.spde)
 w3.index <- inla.spde.make.index(name = 'w', n.spde  = spde3$n.spde)
 
 # Define the the stack
-Xm <- model.matrix(~eqr.std + ppt.std + tmax.std + 
+Xm <- model.matrix(~eqr.std + ppt.std + tmax.std +
                      doy.std + waterbody_type, data = df)
 N <- nrow(df)
 X <- data.frame(eqr.std         = Xm[, 2],
@@ -948,9 +947,9 @@ X <- data.frame(eqr.std         = Xm[, 2],
 # And this is the stack for the Poisson model
 Stack.mesh1 <- inla.stack(
   tag  = "Fit",
-  data = list(y = df$vec_abund),  
-  A    = list(1, 1, A1, 1),                      
-  effects = list( 
+  data = list(y = df$vec_abund),
+  A    = list(1, 1, A1, 1),
+  effects = list(
     Intercept  = rep(1, N),
     X  = as.data.frame(X),
     w = w1.index,
@@ -958,9 +957,9 @@ Stack.mesh1 <- inla.stack(
 
 Stack.mesh2 <- inla.stack(
   tag  = "Fit",
-  data = list(y = df$vec_abund),  
-  A    = list(1, 1, A2, 1),                      
-  effects = list(      
+  data = list(y = df$vec_abund),
+  A    = list(1, 1, A2, 1),
+  effects = list(
     Intercept  = rep(1, N),
     X    = as.data.frame(X),
     w    = w2.index,
@@ -968,9 +967,9 @@ Stack.mesh2 <- inla.stack(
 
 Stack.mesh3 <- inla.stack(
   tag  = "Fit",
-  data = list(y = df$vec_abund),  
-  A    = list(1, 1, A3, 1),                      
-  effects = list(      
+  data = list(y = df$vec_abund),
+  A    = list(1, 1, A3, 1),
+  effects = list(
     Intercept  = rep(1, N),
     X    = as.data.frame(X),
     w    = w3.index,
@@ -978,17 +977,17 @@ Stack.mesh3 <- inla.stack(
 
 
 # Define the formula
-fPois.mesh1 <- y ~ -1 + Intercept + 
+fPois.mesh1 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
-  f(w, model = spde1) 
+  f(w, model = spde1)
 
-fPois.mesh2 <- y ~ -1 + Intercept + 
+fPois.mesh2 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
-  f(w, model = spde2) 
+  f(w, model = spde2)
 
-fPois.mesh3 <- y ~ -1 + Intercept + 
+fPois.mesh3 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
-  f(w, model = spde3) 
+  f(w, model = spde3)
 
 # Executing the model in R-INLA
 Pois.mesh1 <- inla(fPois.mesh1,
@@ -1013,9 +1012,9 @@ Pois.mesh3 <- inla(fPois.mesh3,
 dic  <- c(Pois.mesh1$dic$dic, Pois.mesh2$dic$dic, Pois.mesh3$dic$dic)
 waic <- c(Pois.mesh1$waic$waic, Pois.mesh2$waic$waic, Pois.mesh3$waic$waic)
 DicWaic     <- cbind(dic, waic)
-rownames(DicWaic) <- c("Spatial Poisson GLM with mesh 1",  
+rownames(DicWaic) <- c("Spatial Poisson GLM with mesh 1",
                        "Spatial Poisson GLM with mesh 2",
-                       "Spatial Poisson GLM with mesh 3")  
+                       "Spatial Poisson GLM with mesh 3")
 DicWaic
 
 summary(Pois.mesh1)
@@ -1029,103 +1028,103 @@ summary(Pois.mesh3)
 PlotField <- function(field, mesh, ContourMap, xlim, ylim, Add=FALSE,...){
   stopifnot(length(field) == mesh$n)
   # Plotting region to be the same as the study area polygon
-  if (missing(xlim)) xlim <- ContourMap@bbox[1, ] 
+  if (missing(xlim)) xlim <- ContourMap@bbox[1, ]
   if (missing(ylim)) ylim <- ContourMap@bbox[2, ]
-  
-  # inla.mesh.projector: it creates a lattice using the mesh and specified ranges. 
-  proj <- inla.mesh.projector(mesh, 
-                              xlim = xlim, 
-                              ylim = ylim, 
+
+  # inla.mesh.projector: it creates a lattice using the mesh and specified ranges.
+  proj <- inla.mesh.projector(mesh,
+                              xlim = xlim,
+                              ylim = ylim,
                               dims = c(300, 300))
-  # The function inla.mesh.project can then 
+  # The function inla.mesh.project can then
   # be used to project the w's on this grid.
   field.proj <- inla.mesh.project(proj, field)
-  
+
   # And plot the whole thing
-  image.plot(list(x = proj$x, 
+  image.plot(list(x = proj$x,
                   y = proj$y,
-                  z = field.proj), 
-             xlim = xlim, 
+                  z = field.proj),
+             xlim = xlim,
              ylim = ylim,
              asp = 1,
              add = Add,
-             ...)  
+             ...)
 }
 
-# Plot the spatial random field 
-w1.pm <- Pois.mesh1$summary.random$w$mean  
-w1.sd <- Pois.mesh1$summary.random$w$sd  
+# Plot the spatial random field
+w1.pm <- Pois.mesh1$summary.random$w$mean
+w1.sd <- Pois.mesh1$summary.random$w$sd
 
-w2.pm <- Pois.mesh2$summary.random$w$mean  
-w2.sd <- Pois.mesh2$summary.random$w$sd 
+w2.pm <- Pois.mesh2$summary.random$w$mean
+w2.sd <- Pois.mesh2$summary.random$w$sd
 
-w3.pm <- Pois.mesh3$summary.random$w$mean  
-w3.sd <- Pois.mesh3$summary.random$w$sd 
+w3.pm <- Pois.mesh3$summary.random$w$mean
+w3.sd <- Pois.mesh3$summary.random$w$sd
 
 # Its plotting time!
-PlotField(field = w1.pm, 
-          mesh = mesh1, 
+PlotField(field = w1.pm,
+          mesh = mesh1,
           xlim = range(mesh1$loc[,1]+5000),
           ylim = range(mesh1$loc[,2]+5000))
 
 # Add the sampling locations (in UTM)
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 
 # Get rid of the colours outside Lithuania (i.e., the bad lands)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 
 plot(Lithuania.UTM, add = TRUE)
 
 # And the spatial random field for mesh 2
-PlotField(field = w2.pm, 
-          mesh = mesh2, 
+PlotField(field = w2.pm,
+          mesh = mesh2,
           xlim = range(mesh2$loc[,1]),
           ylim = range(mesh2$loc[,2]))
 
 # Add the sampling locations (in UTM)
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 
 #Determine the area outside the study area
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 
 plot(Buffer.UTM, add = TRUE)
 
 # And the spatial random field for mesh 2
-PlotField(field = w3.pm, 
-          mesh = mesh3, 
+PlotField(field = w3.pm,
+          mesh = mesh3,
           xlim = range(mesh3$loc[,1]),
           ylim = range(mesh3$loc[,2]))
 
 # Add the sampling locations (in UTM)
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 
 #Determine the area outside the study area
-plot(Land3, 
-     col = "white", 
+plot(Land3,
+     col = "white",
      add = TRUE,
      border = "white")
 
 plot(Lithuania.UTM, add = TRUE)
 
-# Model validation 
+# Model validation
 # Plot fitted values versus observed data
 N.rows <- 1:nrow(df)
 mu.SpatPois <- Pois.mesh2$summary.fitted.values[N.rows, "mean"] # this is the number of rows in df
@@ -1179,15 +1178,15 @@ for (i in 1:NSim){
 
 # plot
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosPoisSpat), 
+plot(table(ZerosPoisSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 1500),
      main = "Simulation results")
-points(x = sum(df$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(df$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(df$vec_abund == 0) > ZerosPoisSpat) / 10000
@@ -1195,22 +1194,22 @@ sum(df$vec_abund == 0)
 # cry... there are too few zeros :'(
 
 #========== Poisson GLM with observation level random effects ==========
-# Poisson GLM with observation level random effects for meshes 1 and 2. 
+# Poisson GLM with observation level random effects for meshes 1 and 2.
 # After that the Negative binomial GLM is fitted with meshes 1 and 2.
 
 # Poisson + spatial correlation + OLRE
-hyper.iid <- list(prec = list(prior = 'pc.prec', param = c(0.5, 0.001))) 
-fPois.olre.mesh1 <- y ~ -1 + Intercept + 
+hyper.iid <- list(prec = list(prior = 'pc.prec', param = c(0.5, 0.001)))
+fPois.olre.mesh1 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
   f(w, model = spde1) +
   f(iidx, model="iid", hyper = hyper.iid)
 
-fPois.olre.mesh2 <- y ~ -1 + Intercept + 
+fPois.olre.mesh2 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
   f(w, model = spde2) +
   f(iidx, model="iid", hyper = hyper.iid)
 
-fPois.olre.mesh3 <- y ~ -1 + Intercept + 
+fPois.olre.mesh3 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
   f(w, model = spde3) +
   f(iidx, model="iid", hyper = hyper.iid)
@@ -1258,17 +1257,17 @@ plot(x  = mu.Pois.olre2,
      ylab = "Observed vector numbers")
 
 #========== NB GLM + spatial correlation ==========
-fNB.mesh1 <- y ~ -1 + Intercept + 
+fNB.mesh1 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
-  f(w, model = spde1) 
+  f(w, model = spde1)
 
-fNB.mesh2 <- y ~ -1 + Intercept + 
+fNB.mesh2 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
-  f(w, model = spde2) 
+  f(w, model = spde2)
 
-fNB.mesh3 <- y ~ -1 + Intercept + 
+fNB.mesh3 <- y ~ -1 + Intercept +
   eqr.std + ppt.std + tmax.std + doy.std + waterbody_type +
-  f(w, model = spde3) 
+  f(w, model = spde3)
 
 # Negative binomial with spatial correlation
 NB.mesh1 <- inla(fNB.mesh1,
@@ -1320,103 +1319,103 @@ summary(NB.mesh2)
 summary(NB.mesh3)
 
 # And the spatial random field for mesh 1
-w1NB.pm <- NB.mesh1$summary.random$w$mean  
-w1NB.sd <- NB.mesh1$summary.random$w$sd  
+w1NB.pm <- NB.mesh1$summary.random$w$mean
+w1NB.sd <- NB.mesh1$summary.random$w$sd
 
-PlotField(field = w1NB.pm, 
-          mesh = mesh1, 
+PlotField(field = w1NB.pm,
+          mesh = mesh1,
           xlim = range(mesh1$loc[,1]),
           ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land1, add = TRUE)
 
-PlotField(field = w1NB.sd, 
-          mesh = mesh1, 
+PlotField(field = w1NB.sd,
+          mesh = mesh1,
           xlim = range(mesh1$loc[,1]),
           ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land1, add = TRUE)
 
 # And the spatial random field for mesh 2
-w2NB.pm <- NB.mesh2$summary.random$w$mean  
-w2NB.sd <- NB.mesh2$summary.random$w$sd  
+w2NB.pm <- NB.mesh2$summary.random$w$mean
+w2NB.sd <- NB.mesh2$summary.random$w$sd
 
-PlotField(field = w2NB.pm, 
-          mesh = mesh2, 
+PlotField(field = w2NB.pm,
+          mesh = mesh2,
           xlim = range(mesh2$loc[,1]),
           ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land2, add = TRUE)
 
-PlotField(field = w2NB.sd, 
-          mesh = mesh2, 
+PlotField(field = w2NB.sd,
+          mesh = mesh2,
           xlim = range(mesh2$loc[,1]),
           ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land2, add = TRUE)
 
 # And the spatial random field for mesh 3
-w3NB.pm <- NB.mesh3$summary.random$w$mean  
-w3NB.sd <- NB.mesh3$summary.random$w$sd  
+w3NB.pm <- NB.mesh3$summary.random$w$mean
+w3NB.sd <- NB.mesh3$summary.random$w$sd
 
-PlotField(field = w3NB.pm, 
-          mesh = mesh3, 
+PlotField(field = w3NB.pm,
+          mesh = mesh3,
           xlim = range(mesh3$loc[,1]),
           ylim = range(mesh3$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land3, 
-     col = "white", 
+plot(Land3,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land3, add = TRUE)
 
-PlotField(field = w3NB.sd, 
-          mesh = mesh3, 
+PlotField(field = w3NB.sd,
+          mesh = mesh3,
           xlim = range(mesh3$loc[,1]),
           ylim = range(mesh3$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land3, 
-     col = "white", 
+plot(Land3,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land3, add = TRUE)
@@ -1459,21 +1458,21 @@ for (i in 1:NSim){
   Beta  <- SimData[[i]]$latent[RowNum.Pos]
   w     <- SimData[[i]]$latent[RowNum.w]
   mu       <- exp(Xm %*% Beta + Am2 %*% w)
-  YNBSpat[,i]    <- rnegbin(N, mu = mu, theta = k)  
+  YNBSpat[,i]    <- rnegbin(N, mu = mu, theta = k)
   ZerosNBSpat[i] <- sum(YNBSpat[,i] == 0)
 }
 
 # plot
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosNBSpat), 
+plot(table(ZerosNBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(1000, 2000),
      main = "Simulation results")
-points(x = sum(df$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(df$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(df$vec_abund == 0) > ZerosNBSpat) / 10000
@@ -1498,17 +1497,17 @@ w3.01.index <- inla.spde.make.index(name = 'w01', n.spde  = spde3$n.spde)
 Xm <- model.matrix(~eqr.std + ppt.std + tmax.std + doy.std + waterbody_type, data = df)
 
 N <- nrow(df)
-X <- data.frame(Intercept.pos      = rep(1, N), 
+X <- data.frame(Intercept.pos      = rep(1, N),
                 eqr.pos            = Xm[, 2],
-                ppt.pos            = Xm[, 3], 
+                ppt.pos            = Xm[, 3],
                 tmax.pos           = Xm[, 4],
                 doy.pos            = Xm[, 5],
                 waterbody_type.pos = Xm[, 6])
 
 
-X01 <- data.frame(Intercept.01      = rep(1, N), 
+X01 <- data.frame(Intercept.01      = rep(1, N),
                   eqr.01            = Xm[, 2],
-                  ppt.01            = Xm[, 3], 
+                  ppt.01            = Xm[, 3],
                   tmax.01           = Xm[, 4],
                   doy.01            = Xm[, 5],
                   waterbody_type.01 = Xm[, 6])
@@ -1516,49 +1515,49 @@ X01 <- data.frame(Intercept.01      = rep(1, N),
 # And this is the stack for the ZAP model
 StackPos.mesh1 <- inla.stack(
   tag  = "FitPos",
-  data = list(AllY = cbind(df$vec_abund_pos, NA)),  
-  A    = list(1, A1),                      
-  effects = list(            
+  data = list(AllY = cbind(df$vec_abund_pos, NA)),
+  A    = list(1, A1),
+  effects = list(
     Xpos = as.data.frame(X),
     wpos = w1.pos.index))
 
 StackPos.mesh2 <- inla.stack(
   tag  = "FitPos",
-  data = list(AllY = cbind(df$vec_abund_pos, NA)),  
-  A    = list(1, A2),                      
-  effects = list(            
+  data = list(AllY = cbind(df$vec_abund_pos, NA)),
+  A    = list(1, A2),
+  effects = list(
          Xpos = as.data.frame(X),
          wpos = w2.pos.index))
 
 StackPos.mesh3 <- inla.stack(
   tag  = "FitPos",
-  data = list(AllY = cbind(df$vec_abund_pos, NA)),  
-  A    = list(1, A3),                      
-  effects = list(            
+  data = list(AllY = cbind(df$vec_abund_pos, NA)),
+  A    = list(1, A3),
+  effects = list(
          Xpos = as.data.frame(X),
          wpos = w3.pos.index))
 
 Stack01.mesh1 <- inla.stack(
   tag  = "Fit01",
-  data = list(AllY = cbind(NA, df$vec_abund_pa)),  
-  A    = list(1, A1),                      
-  effects = list(      
+  data = list(AllY = cbind(NA, df$vec_abund_pa)),
+  A    = list(1, A1),
+  effects = list(
     X01 = as.data.frame(X01),
     w01 = w1.01.index))
 
 Stack01.mesh2 <- inla.stack(
   tag  = "Fit01",
-  data = list(AllY = cbind(NA, df$vec_abund_pa)),  
-  A    = list(1, A2),                      
-  effects = list(      
+  data = list(AllY = cbind(NA, df$vec_abund_pa)),
+  A    = list(1, A2),
+  effects = list(
     X01 = as.data.frame(X01),
     w01 = w2.01.index))
 
 Stack01.mesh3 <- inla.stack(
   tag  = "Fit01",
-  data = list(AllY = cbind(NA, df$vec_abund_pa)),  
-  A    = list(1, A3),                      
-  effects = list(      
+  data = list(AllY = cbind(NA, df$vec_abund_pa)),
+  A    = list(1, A3),
+  effects = list(
     X01 = as.data.frame(X01),
     w01 = w3.01.index))
 
@@ -1586,7 +1585,7 @@ fZA.mesh3  <- AllY ~ -1 + Intercept.pos +eqr.pos + ppt.pos + tmax.pos + doy.pos 
 # Run model
 HyperZap <- list(theta = list(initial = -10, fixed = TRUE))
 ZAP.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatedpoisson0", "binomial"),  
+                   family = c("zeroinflatedpoisson0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -1619,9 +1618,9 @@ ZAP.mesh3 <- inla(fZA.mesh3,
 dic  <- c(ZAP.mesh1$dic$dic, ZAP.mesh2$dic$dic, ZAP.mesh3$dic$dic)
 waic <- c(ZAP.mesh1$waic$waic, ZAP.mesh2$waic$waic, ZAP.mesh3$waic$waic)
 DicWaic     <- cbind(dic, waic)
-rownames(DicWaic) <- c("ZAP model with spatial mesh 1",  
+rownames(DicWaic) <- c("ZAP model with spatial mesh 1",
                        "ZAP model with spatial mesh 2",
-                       "ZAP model with spatial mesh 3")  
+                       "ZAP model with spatial mesh 3")
 DicWaic
 
 summary(ZAP.mesh1)
@@ -1644,8 +1643,8 @@ X01     <- as.matrix(X01)
 
 # A1.m   <- as.matrix(A1)
 A2.m   <- as.matrix(A2)
-wPos   <- ZAP.mesh2$summary.random$wpos$mean 
-w01    <- ZAP.mesh2$summary.random$w01$mean 
+wPos   <- ZAP.mesh2$summary.random$wpos$mean
+w01    <- ZAP.mesh2$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
 mu.ZTruncPois.self <- mu /  (1 - exp(-mu))
@@ -1664,7 +1663,7 @@ Dispersion
 
 # Simulation study ZAP model with spatial correlation
 ZAP.mesh2.sim <- inla(fZA.mesh2,
-                      family = c("zeroinflatedpoisson0", "binomial"),  
+                      family = c("zeroinflatedpoisson0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh2),
@@ -1727,31 +1726,31 @@ for (i in 1:NSim) {
   skips <- 0
   skipped_due_to_na <- FALSE
   skip_iteration <- FALSE
-  
+
   repeat {
     BetaPos <- SimData[[i]]$latent[RowNum.Pos]
     Beta01 <- SimData[[i]]$latent[RowNum.01]
     wPos <- SimData[[i]]$latent[RowNum.wPos]
     w01 <- SimData[[i]]$latent[RowNum.w01]
-    
+
     mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
     Pi <- exp(X01 %*% Beta01 + A2.m %*% w01) / (1 + exp(X01 %*% Beta01 + A2.m %*% w01))
-    
+
     # Check for NA values in mu or Pi
     if (any(is.na(mu)) || any(is.na(Pi))) {
       message(paste("Iteration", i, ": Found NA values in mu or Pi. Retrying."))
       skips <- skips + 1
-      
+
       if (skips == max_skips) {
         message(paste("Iteration", i, ": Skipping due to persistent NA values after", max_skips, "retries."))
         skipped_due_to_na <- TRUE
         skip_iteration <- TRUE
         break
       }
-      
+
       next # Retry the iteration
     }
-    
+
     # Check for too-small values in mu and replace
     if (any(mu < 1e-8, na.rm = TRUE)) {
       while (any(mu < 1e-8, na.rm = TRUE) && skips < max_skips) {
@@ -1760,7 +1759,7 @@ for (i in 1:NSim) {
         skips <- skips + 1
         replacements <- replacements + 1 # Track replacements
       }
-      
+
       if (skips == max_skips) {
         message(paste("Iteration", i, ": Skipping after", max_skips, "adjustments due to small mu values."))
         skipped_due_to_na <- TRUE
@@ -1768,7 +1767,7 @@ for (i in 1:NSim) {
         break
       }
     }
-    
+
     # Catch errors/warnings in VGAM::rzapois using tryCatch
     tryCatch({
       YZAPSpat[, i] <- VGAM::rzapois(N, lambda = mu, pobs0 = 1 - Pi)
@@ -1787,19 +1786,19 @@ for (i in 1:NSim) {
       skipped_due_to_na <- TRUE
       skip_iteration <- TRUE
     })
-    
+
     # Break the repeat loop if an error was encountered
     if (skip_iteration) break
-    
+
     # If no issues, proceed with the rest of the iteration
     break # Exit the repeat loop and continue to the next iteration
   }
-  
+
   # Store information about replacements or skips for this iteration
   if (replacements > 0 || skipped_due_to_na) {
     replacement_info <- rbind(replacement_info, data.frame(Iteration = i, Replacements = replacements, SkippedDueToNA = skipped_due_to_na))
   }
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -1813,15 +1812,15 @@ total_replacements <- nrow(replacement_info)
 
 # plot the output
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZAPSpat), 
+plot(table(ZerosZAPSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 1500),
      main = "Simulation results")
-points(x = sum(df$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(df$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(df$vec_abund == 0) > ZerosZAPSpat) / 10000
@@ -1859,8 +1858,8 @@ plot(residuals_sim)
 hist(residuals_sim$scaledResiduals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR            = df$eqr, 
-                         PPT            = df$ppt, 
+predictors <- data.frame(EQR            = df$eqr,
+                         PPT            = df$ppt,
                          TMAX           = df$tmax,
                          DOY            = df$doy,
                          Waterbody_type = df$waterbody_type)
@@ -1878,21 +1877,21 @@ for (i in 1:ncol(predictors)) {
 
 # Results of the ZAP model with spatial correlation
 # Plot the spatial random field for the ZAP with mesh 2
-wpm.ZAP.Pos <- ZAP.mesh2$summary.random$wpos$mean  
-wpm.ZAP.01  <- ZAP.mesh2$summary.random$w01$mean  
-wsd.ZAP.Pos <- ZAP.mesh2$summary.random$wpos$sd  
-wsd.ZAP.01  <- ZAP.mesh2$summary.random$w01$sd  
+wpm.ZAP.Pos <- ZAP.mesh2$summary.random$wpos$mean
+wpm.ZAP.01  <- ZAP.mesh2$summary.random$w01$mean
+wsd.ZAP.Pos <- ZAP.mesh2$summary.random$wpos$sd
+wsd.ZAP.01  <- ZAP.mesh2$summary.random$w01$sd
 
 # Plot the spatial random field again, and add white space for the non-study area
 par(mfrow = c(1, 1), mar = c(5,5,2,2), cex.lab = 1.5)
 PlotField(field = wpm.ZAP.Pos, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -1900,12 +1899,12 @@ plot(Buffer.UTM, add = TRUE)
 
 PlotField(field = wsd.ZAP.Pos, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -1914,12 +1913,12 @@ plot(Buffer.UTM, add = TRUE)
 # Binary part of the ZAP
 PlotField(field = wpm.ZAP.01, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -1928,12 +1927,12 @@ plot(Buffer.UTM, add = TRUE)
 
 PlotField(field = wsd.ZAP.01, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -1943,7 +1942,7 @@ plot(Buffer.UTM, add = TRUE)
 #========== ZANB model with spatial correlation ==========
 # ZANB model with spatial correlation
 ZANB.mesh1 <- inla(fZA.mesh1,
-                  family = c("zeroinflatednbinomial0", "binomial"),  
+                  family = c("zeroinflatednbinomial0", "binomial"),
                   control.family = list(list(hyper = HyperZap),
                                         list()),
                   data = inla.stack.data(Stack.ZA.mesh1),
@@ -1976,9 +1975,9 @@ ZANB.mesh3 <- inla(fZA.mesh3,
 dic  <- c(ZANB.mesh1$dic$dic, ZANB.mesh2$dic$dic, ZANB.mesh3$dic$dic)
 waic <- c(ZANB.mesh1$waic$waic, ZANB.mesh2$waic$waic, ZANB.mesh3$waic$waic)
 DicWaic     <- cbind(dic, waic)
-rownames(DicWaic) <- c("ZANB model with spatial mesh 1",  
+rownames(DicWaic) <- c("ZANB model with spatial mesh 1",
                        "ZANB model with spatial mesh 2",
-                       "ZANB model with spatial mesh 3")  
+                       "ZANB model with spatial mesh 3")
 DicWaic
 
 summary(ZANB.mesh1)
@@ -2001,8 +2000,8 @@ X01  <- as.matrix(X01)
 
 # A1.m <- as.matrix(A1)
 A2.m <- as.matrix(A2)
-wPos   <- ZANB.mesh2$summary.random$wpos$mean 
-w01    <- ZANB.mesh2$summary.random$w01$mean 
+wPos   <- ZANB.mesh2$summary.random$wpos$mean
+w01    <- ZANB.mesh2$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
 P0 <- (k / (mu + k))^k
@@ -2030,7 +2029,7 @@ summary(ZANB.mesh2)
 
 # Simulation study ZINB model with spatial correlation
 ZANB.mesh2.sim <- inla(fZA.mesh2,
-                       family = c("zeroinflatednbinomial0", "binomial"),  
+                       family = c("zeroinflatednbinomial0", "binomial"),
                        control.family = list(list(hyper = HyperZap),
                                              list()),
                        data = inla.stack.data(Stack.ZA.mesh2),
@@ -2085,14 +2084,14 @@ for (i in 1:NSim) {
   wPos <- SimData[[i]]$latent[RowNum.wPos]
   w01 <- SimData[[i]]$latent[RowNum.w01]
   k   <- SimData[[i]]$hyperpar[1] # strictly speaking, simulated values should be used, but there is a tendency for k parameters to not look very random
-  
+
   mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
   Pi <- exp(X01 %*% Beta01 + A2.m %*% w01) / (1 + exp(X01 %*% Beta01 + A2.m %*% w01))
-  
+
   # Generate the values using the VGAM function
-  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)  
+  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)
   ZerosZANBSpat[i] <- sum(YNBSpat[, i] == 0)
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -2101,15 +2100,15 @@ for (i in 1:NSim) {
 close(pb)
 
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZANBSpat), 
+plot(table(ZerosZANBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 2000),
      main = "Simulation results")
-points(x = sum(df$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(df$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(df$vec_abund == 0) > ZerosZANBSpat) / 1000
@@ -2145,8 +2144,8 @@ plot(residuals_sim)
 hist(residuals_sim$scaledResiduals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR            = df$eqr, 
-                         PPT            = df$ppt, 
+predictors <- data.frame(EQR            = df$eqr,
+                         PPT            = df$ppt,
                          TMAX           = df$tmax,
                          DOY            = df$doy,
                          Waterbody_type = df$waterbody_type)
@@ -2163,33 +2162,33 @@ for (i in 1:ncol(predictors)) {
 }
 
 # Results of the ZANB model with spatial correlation
-wpm.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$mean  
-wpm.ZANB.01  <- ZANB.mesh2$summary.random$w01$mean  
-wsd.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$sd  
-wsd.ZANB.01  <- ZANB.mesh2$summary.random$w01$sd  
+wpm.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$mean
+wpm.ZANB.01  <- ZANB.mesh2$summary.random$w01$mean
+wsd.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$sd
+wsd.ZANB.01  <- ZANB.mesh2$summary.random$w01$sd
 
 # Plot the spatial random field again, and add white space for the non-study area
 par(mfrow = c(1, 1), mar = c(5,5,2,2), cex.lab = 1.5)
 PlotField(field = wpm.ZANB.Pos, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.Pos, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -2197,24 +2196,24 @@ plot(Lithuania.UTM, add = TRUE)
 # Binary part of the ZANB
 PlotField(field = wpm.ZANB.01, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.01, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -2234,7 +2233,7 @@ dic  <- c(Pois.mesh1$dic$dic, Pois.mesh2$dic$dic,
           Pois.olre.mesh1$dic$dic, Pois.olre.mesh2$dic$dic,
           NB.mesh1$dic$dic, NB.mesh2$dic$dic,
           DIC.ZAP.mesh1, DIC.ZAP.mesh2,
-          DIC.ZANB.mesh1, DIC.ZANB.mesh2) 
+          DIC.ZANB.mesh1, DIC.ZANB.mesh2)
 
 waic <- c(Pois.mesh1$waic$waic, Pois.mesh2$waic$waic,
           Pois.olre.mesh1$waic$waic, Pois.olre.mesh2$waic$waic,
@@ -2243,19 +2242,19 @@ waic <- c(Pois.mesh1$waic$waic, Pois.mesh2$waic$waic,
           WAIC.ZANB.mesh1, WAIC.ZANB.mesh2)
 
 Z.out     <- cbind(dic, waic)
-rownames(Z.out) <- c("Spatial Poisson GLM mesh 1",  
+rownames(Z.out) <- c("Spatial Poisson GLM mesh 1",
                      "Spatial Poisson GLM mesh 2",
-                     "Spatial Poisson GLM mesh 1 + olre",  
+                     "Spatial Poisson GLM mesh 1 + olre",
                      "Spatial Poisson GLM mesh 2 + olre",
-                     "Spatial NB GLM mesh 1",  
+                     "Spatial NB GLM mesh 1",
                      "Spatial NB GLM mesh 2",
-                     "Spatial ZAP model mesh 1",  
+                     "Spatial ZAP model mesh 1",
                      "Spatial ZAP model mesh 2",
-                     "Spatial ZANB model mesh 1",  
+                     "Spatial ZANB model mesh 1",
                      "Spatial ZANB model mesh 2")
 Z.out
 
-# looks like the spatial ZAP model with mesh 2 is a clear standout butttt, 
+# looks like the spatial ZAP model with mesh 2 is a clear standout butttt,
 # when plotting the mesh, it looks BAAAAAAAD! Lets go with ZANB with mesh2 :)))))
 
 MyData <- data.frame(
@@ -2269,7 +2268,7 @@ MyData <- data.frame(
               ZAP.mesh2$summary.hyper[c(1,3),"mean"],
               ZANB.mesh1$summary.hyper[c(3,5),"mean"],
               ZANB.mesh2$summary.hyper[c(3,5),"mean"]) / 1000,
-   
+
    sigma_u = c(Pois.mesh1$summary.hyper[2,"mean"],
                Pois.mesh2$summary.hyper[2,"mean"],
                Pois.olre.mesh1$summary.hyper[2,"mean"],
@@ -2283,19 +2282,19 @@ MyData <- data.frame(
 
 
 colnames(MyData) <- c("Range of mesh", "sigma u")
-rownames(MyData) <- c("Spatial Poisson GLM mesh 1", 
+rownames(MyData) <- c("Spatial Poisson GLM mesh 1",
                       "Spatial Poisson GLM mesh 2",
-                      "Spatial Poisson GLM mesh 1 + olre", 
-                      "Spatial Poisson GLM mesh 2 + olre", 
+                      "Spatial Poisson GLM mesh 1 + olre",
+                      "Spatial Poisson GLM mesh 2 + olre",
                       "Spatial NB GLM mesh 1",
                       "Spatial NB GLM mesh 2",
-                      "Spatial ZAP model mesh 1, count part", 
+                      "Spatial ZAP model mesh 1, count part",
                       "Spatial ZAP model mesh 1, binary part",
-                      "Spatial ZAP model mesh 2, count part", 
+                      "Spatial ZAP model mesh 2, count part",
                       "Spatial ZAP model mesh 2, binary part",
-                      "Spatial ZANB model mesh 1, count part", 
+                      "Spatial ZANB model mesh 1, count part",
                       "Spatial ZANB model mesh 1, binary part",
-                      "Spatial ZANB model mesh 2, count part", 
+                      "Spatial ZANB model mesh 2, count part",
                       "Spatial ZANB model mesh 2, binary part")
 print(MyData, digits = 5)
 
@@ -2308,11 +2307,11 @@ ENB   <- (df$vec_abund - mu.NB) / sqrt(mu.NB + mu.NB^2 / NB.mesh1$summary.hyper[
 
 # Let's make a variogram of the Pearson residuals.
 mydata <- data.frame(EPoi.glm = EPoi.glm,
-                     EZAP = EZAP, 
+                     EZAP = EZAP,
                      EZANB = EZANB,
                      ESpatPois = ESpatPois,
                      ENB = ENB,
-                     Ykm = df$Ykm, 
+                     Ykm = df$Ykm,
                      Xkm = df$Xkm)
 coordinates(mydata)  <- c("Xkm", "Ykm")
 
@@ -2322,9 +2321,9 @@ Vario.NB   <- variogram(ENB ~ 1, mydata, cutoff = 300, cressie = TRUE)
 Vario.ZAP  <- variogram(EZAP ~ 1, mydata, cutoff = 300, cressie = TRUE)
 Vario.ZANB <- variogram(EZANB ~ 1, mydata, cutoff = 300, cressie = TRUE)
 
-AllVarios <- data.frame(Gamma = c(#GLM.Poi$gamma, 
+AllVarios <- data.frame(Gamma = c(#GLM.Poi$gamma,
                                   Vario.pois$gamma, Vario.NB$gamma, Vario.ZAP$gamma, Vario.ZANB$gamma),
-                        Dist  = c(#GLM.Poi$dist, 
+                        Dist  = c(#GLM.Poi$dist,
                                   Vario.pois$dist, Vario.NB$dist, Vario.ZAP$dist, Vario.ZANB$dist),
                         ID    = factor(rep(c(
                           #"Poisson GLM",
@@ -2336,9 +2335,9 @@ AllVarios <- data.frame(Gamma = c(#GLM.Poi$gamma,
 p1 <- ggplot()
 p1 <- p1 + xlab("Distance") + ylab("Sample-variogram")
 p1 <- p1 + theme(text = element_text(size = 15))
-p1 <- p1 + geom_point(data = AllVarios, 
+p1 <- p1 + geom_point(data = AllVarios,
                       aes(x = Dist, y = Gamma))
-p1 <- p1 + geom_smooth(data = AllVarios, 
+p1 <- p1 + geom_smooth(data = AllVarios,
                        aes(x = Dist, y = Gamma))
 p1 <- p1 + facet_wrap(~ ID)
 p1
@@ -2361,8 +2360,8 @@ X01  <- as.matrix(X01)
 
 # A1.m <- as.matrix(A1)
 A2.m <- as.matrix(A2)
-wPos   <- ZANB.mesh2$summary.random$wpos$mean 
-w01    <- ZANB.mesh2$summary.random$w01$mean 
+wPos   <- ZANB.mesh2$summary.random$wpos$mean
+w01    <- ZANB.mesh2$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
 P0 <- (k / (mu + k))^k
@@ -2388,7 +2387,7 @@ plot(x  = muZANB,
 
 # Simulation study ZANB model with spatial correlation
 ZANB.mesh2.sim <- inla(fZA.mesh2,
-                       family = c("zeroinflatednbinomial0", "binomial"),  
+                       family = c("zeroinflatednbinomial0", "binomial"),
                        control.family = list(list(hyper = HyperZap),
                                              list()),
                        data = inla.stack.data(Stack.ZA.mesh2),
@@ -2440,14 +2439,14 @@ for (i in 1:NSim) {
   wPos <- SimData[[i]]$latent[RowNum.wPos]
   w01 <- SimData[[i]]$latent[RowNum.w01]
   k   <- SimData[[i]]$hyperpar[1]
-  
+
   mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
   Pi <- exp(X01 %*% Beta01 + A2.m %*% w01) / (1 + exp(X01 %*% Beta01 + A2.m %*% w01))
-  
+
   # Generate the values using the VGAM function
-  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)  
+  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)
   ZerosZANBSpat[i] <- sum(YNBSpat[, i] == 0)
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -2455,15 +2454,15 @@ for (i in 1:NSim) {
 close(pb)
 
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZANBSpat), 
+plot(table(ZerosZANBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 2000),
      main = "Simulation results")
-points(x = sum(df$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(df$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(df$vec_abund == 0) > ZerosZANBSpat) / 10000
@@ -2500,8 +2499,8 @@ plot(residuals_sim)
 hist(residuals_sim$scaledResiduals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR            = df$eqr, 
-                         PPT            = df$ppt, 
+predictors <- data.frame(EQR            = df$eqr,
+                         PPT            = df$ppt,
                          TMAX           = df$tmax,
                          DOY            = df$doy,
                          WATERBODY_TYPE = df$waterbody_type)
@@ -2532,60 +2531,60 @@ plot(EZANB ~ eqr,
      xlab = "EQR",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")   
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ ppt,
      xlab = "Average precipitation",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")   
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ tmax,
      xlab = "Average maximum temperature",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")     
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ doy,
      xlab = "Day of year",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")   
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ waterbody_type,
      xlab = "Waterbody type",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")   
+abline(h = 0, lty = 2, col = "red")
 
 # Fit a smoother on the residuals and see whether it tells us something.
 library(mgcv)
 par(mfrow = c(2,3), mar= c(5,5,2,2), cex.lab = 1.5)
-T1 <- gam(EZANB ~ s(eqr), 
+T1 <- gam(EZANB ~ s(eqr),
           data = df)
 summary(T1)
 plot(T1)
 #That is not really convincing.
 
-T2 <- gam(EZANB ~ s(ppt), 
+T2 <- gam(EZANB ~ s(ppt),
           data = df)
 summary(T2)
 plot(T2)
 #That is not really convincing.
 
-T3 <- gam(EZANB ~ s(tmax), 
+T3 <- gam(EZANB ~ s(tmax),
           data = df)
 summary(T3)
 plot(T3)
 #That is not really convincing.
 
-T4 <- gam(EZANB ~ s(doy), 
+T4 <- gam(EZANB ~ s(doy),
           data = df)
 summary(T4)
 plot(T4)
 #That is interesting.
 
-T5 <- boxplot(EZANB ~ waterbody_type, 
+T5 <- boxplot(EZANB ~ waterbody_type,
           data = df)
 summary(T5)
 plot(T5)
@@ -2593,51 +2592,51 @@ plot(T5)
 
 # Plot residuals vs each covariate not in the model.
 par(mfrow = c(2,3), mar= c(5,5,2,2), cex.lab = 1.5)
-boxplot(EZANB ~ fyear, 
+boxplot(EZANB ~ fyear,
         xlab = "Year",
         ylab = "Pearson residuals",
         data = df)
-abline(h = 0, lty = 2, col = "red")    
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ month,
      xlab = "Month",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")  
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ tmin,
      xlab = "Average minimum temperature",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")  
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ ws,
      xlab = "Wind speed",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")  
+abline(h = 0, lty = 2, col = "red")
 
 plot(EZANB ~ q,
      xlab = "Discharge",
      ylab = "Pearson residuals",
      data = df)
-abline(h = 0, lty = 2, col = "red")  
+abline(h = 0, lty = 2, col = "red")
 
 # Fit a smoother on the residuals and see whether it tells us something.
 par(mfrow = c(2,3), mar= c(5,5,2,2), cex.lab = 1.5)
-T1 <- gam(EZANB ~ s(tmin), 
+T1 <- gam(EZANB ~ s(tmin),
           data = df)
 summary(T1)
 plot(T1)
 #That is not really convincing.
 
-T2 <- gam(EZANB ~ s(ws), 
+T2 <- gam(EZANB ~ s(ws),
           data = df)
 summary(T2)
 plot(T2)
 #That is interesting.
 
-T3 <- gam(EZANB ~ s(q), 
+T3 <- gam(EZANB ~ s(q),
           data = df)
 summary(T3)
 plot(T3)
@@ -2655,10 +2654,10 @@ par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
 mydata <- data.frame(EZANB, df$Ykm, df$Xkm)
 coordinates(mydata)    <- c("df.Ykm", "df.Xkm")
 Vario.ZANB <- variogram(EZANB ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario.ZANB, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario.ZANB,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Is this a horizontal band of points? Kinda!
 
@@ -2668,36 +2667,36 @@ par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
 mydata <- data.frame(residuals_sim$scaledResiduals, df$Ykm, df$Xkm)
 coordinates(mydata)    <- c("df.Ykm", "df.Xkm")
 Vario.ZANB <- variogram(residuals_sim$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario.ZANB, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario.ZANB,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Is this a horizontal band of points? YESSSSS :D!
 
 #========== Model selection of ZANB model ==========
 #===== Optimal random structure =====
-fZA.mesh2.A  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + ppt.pos + tmax.pos + doy.pos + waterbody_type.pos + 
+fZA.mesh2.A  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos + ppt.pos + tmax.pos + doy.pos + waterbody_type.pos +
   # f(wpos, model = spde2) +
-  Intercept.01 + 
+  Intercept.01 +
   eqr.01 + ppt.01 + tmax.01 + doy.01 + waterbody_type.01 +
   f(w01, model = spde2)
 
-fZA.mesh2.B  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + ppt.pos + tmax.pos + doy.pos + waterbody_type.pos + 
+fZA.mesh2.B  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos + ppt.pos + tmax.pos + doy.pos + waterbody_type.pos +
   f(wpos, model = spde2) +
-  Intercept.01 + 
-  eqr.01 + ppt.01 + tmax.01 + doy.01 + waterbody_type.01 # + 
+  Intercept.01 +
+  eqr.01 + ppt.01 + tmax.01 + doy.01 + waterbody_type.01 # +
   # f(w01, model = spde2)
 
-fZA.mesh2.C  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + ppt.pos + tmax.pos + doy.pos + waterbody_type.pos + 
+fZA.mesh2.C  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos + ppt.pos + tmax.pos + doy.pos + waterbody_type.pos +
   # f(wpos, model = spde2) +
-  Intercept.01 + 
+  Intercept.01 +
   eqr.01 + ppt.01 + tmax.01 + doy.01 + waterbody_type.01 # +
   # f(w01, model = spde2)
 
@@ -2769,196 +2768,196 @@ HyperZap <- list(theta = list(initial = -10, fixed = TRUE),
 # Round 1: dropped one variable from each model
 #	Specify the model formula
 # full model
-fZA.mesh2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # eqr from count part
-fZA.mesh2.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.1  <- AllY ~ -1 +
+  Intercept.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # ppt from count part
-fZA.mesh2.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # tmax from count part
-fZA.mesh2.3  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.3  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # doy from count part
-fZA.mesh2.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # waterbpdy_type from count part
-fZA.mesh2.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # eqr from binary part
-fZA.mesh2.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # ppt from binary part
-fZA.mesh2.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  tmax.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  tmax.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # tmax from binary part
-fZA.mesh2.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # doy from binary part
-fZA.mesh2.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # waterbody_type from binary part
-fZA.mesh2.10  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  doy.01 + 
+fZA.mesh2.10  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  tmax.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # fit the models
 ZANB.mesh2 <- inla(fZA.mesh2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -2969,7 +2968,7 @@ ZANB.mesh2 <- inla(fZA.mesh2,
 
 
 ZANB.mesh2.1 <- inla(fZA.mesh2.1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -2980,7 +2979,7 @@ ZANB.mesh2.1 <- inla(fZA.mesh2.1,
 
 
 ZANB.mesh2.2 <- inla(fZA.mesh2.2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -2991,7 +2990,7 @@ ZANB.mesh2.2 <- inla(fZA.mesh2.2,
 
 
 ZANB.mesh2.3 <- inla(fZA.mesh2.3,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3002,7 +3001,7 @@ ZANB.mesh2.3 <- inla(fZA.mesh2.3,
 
 
 ZANB.mesh2.4 <- inla(fZA.mesh2.4,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3013,7 +3012,7 @@ ZANB.mesh2.4 <- inla(fZA.mesh2.4,
 
 
 ZANB.mesh2.5 <- inla(fZA.mesh2.5,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3024,7 +3023,7 @@ ZANB.mesh2.5 <- inla(fZA.mesh2.5,
 
 
 ZANB.mesh2.6 <- inla(fZA.mesh2.6,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3035,7 +3034,7 @@ ZANB.mesh2.6 <- inla(fZA.mesh2.6,
 
 
 ZANB.mesh2.7 <- inla(fZA.mesh2.7,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3046,7 +3045,7 @@ ZANB.mesh2.7 <- inla(fZA.mesh2.7,
 
 
 ZANB.mesh2.8 <- inla(fZA.mesh2.8,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3056,7 +3055,7 @@ ZANB.mesh2.8 <- inla(fZA.mesh2.8,
                      A = inla.stack.A(Stack.ZA.mesh2)))
 
 ZANB.mesh2.9 <- inla(fZA.mesh2.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -3066,7 +3065,7 @@ ZANB.mesh2.9 <- inla(fZA.mesh2.9,
                        A = inla.stack.A(Stack.ZA.mesh2)))
 
 ZANB.mesh2.10 <- inla(fZA.mesh2.10,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -3089,19 +3088,19 @@ DIC.ZANB.mesh2.9 = sum(tapply(ZANB.mesh2.9$dic$local.dic, ZANB.mesh2.9$dic$famil
 DIC.ZANB.mesh2.10 = sum(tapply(ZANB.mesh2.10$dic$local.dic, ZANB.mesh2.10$dic$family, sum))
 
 Z <- matrix(nrow = 11, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh2, 
-           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.4, DIC.ZANB.mesh2.5, 
+Z[,1] <- c(DIC.ZANB.mesh2,
+           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.4, DIC.ZANB.mesh2.5,
            DIC.ZANB.mesh2.6, DIC.ZANB.mesh2.7, DIC.ZANB.mesh2.8, DIC.ZANB.mesh2.9, DIC.ZANB.mesh2.10)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "ppt count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "ppt count part",
                  "tmax count part",
                  "doy count part",
                  "waterbody_type count part",
-                 "eqr binary part", 
-                 "ppt binary part", 
+                 "eqr binary part",
+                 "ppt binary part",
                  "tmax binary part",
                  "doy binary part",
                  "waterbody_type binary part")
@@ -3128,169 +3127,169 @@ print(delta_DIC)
 # Round 2: dropped tmax from binary model
 #	Specify the model formula
 # full model
-fZA.mesh2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # eqr from count part
-fZA.mesh2.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.1  <- AllY ~ -1 +
+  Intercept.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # ppt from count part
-fZA.mesh2.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # tmax from count part
-fZA.mesh2.3  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.3  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # doy from count part
-fZA.mesh2.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # waterbpdy_type from count part
-fZA.mesh2.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # eqr from binary part
-fZA.mesh2.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  ppt.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  ppt.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # ppt from binary part
-fZA.mesh2.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # doy from binary part
-fZA.mesh2.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  waterbody_type.01 + 
+fZA.mesh2.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  waterbody_type.01 +
   f(w01, model = spde2)
 
 # waterbody_type from binary part
-fZA.mesh2.10  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.10  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # fit the models
 ZANB.mesh2 <- inla(fZA.mesh2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3301,7 +3300,7 @@ ZANB.mesh2 <- inla(fZA.mesh2,
 
 
 ZANB.mesh2.1 <- inla(fZA.mesh2.1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3312,7 +3311,7 @@ ZANB.mesh2.1 <- inla(fZA.mesh2.1,
 
 
 ZANB.mesh2.2 <- inla(fZA.mesh2.2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3323,7 +3322,7 @@ ZANB.mesh2.2 <- inla(fZA.mesh2.2,
 
 
 ZANB.mesh2.3 <- inla(fZA.mesh2.3,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3334,7 +3333,7 @@ ZANB.mesh2.3 <- inla(fZA.mesh2.3,
 
 
 ZANB.mesh2.4 <- inla(fZA.mesh2.4,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3345,7 +3344,7 @@ ZANB.mesh2.4 <- inla(fZA.mesh2.4,
 
 
 ZANB.mesh2.5 <- inla(fZA.mesh2.5,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3356,7 +3355,7 @@ ZANB.mesh2.5 <- inla(fZA.mesh2.5,
 
 
 ZANB.mesh2.6 <- inla(fZA.mesh2.6,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3367,7 +3366,7 @@ ZANB.mesh2.6 <- inla(fZA.mesh2.6,
 
 
 ZANB.mesh2.7 <- inla(fZA.mesh2.7,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3378,7 +3377,7 @@ ZANB.mesh2.7 <- inla(fZA.mesh2.7,
 
 
 ZANB.mesh2.9 <- inla(fZA.mesh2.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -3389,7 +3388,7 @@ ZANB.mesh2.9 <- inla(fZA.mesh2.9,
 
 
 ZANB.mesh2.10 <- inla(fZA.mesh2.10,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -3411,19 +3410,19 @@ DIC.ZANB.mesh2.9 = sum(tapply(ZANB.mesh2.9$dic$local.dic, ZANB.mesh2.9$dic$famil
 DIC.ZANB.mesh2.10 = sum(tapply(ZANB.mesh2.10$dic$local.dic, ZANB.mesh2.10$dic$family, sum))
 
 Z <- matrix(nrow = 10, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh2, 
-           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.4, DIC.ZANB.mesh2.5, 
+Z[,1] <- c(DIC.ZANB.mesh2,
+           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.4, DIC.ZANB.mesh2.5,
            DIC.ZANB.mesh2.6, DIC.ZANB.mesh2.7, DIC.ZANB.mesh2.9, DIC.ZANB.mesh2.10)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "ppt count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "ppt count part",
                  "tmax count part",
                  "doy count part",
                  "waterbody_type count part",
-                 "eqr binary part", 
-                 "ppt binary part", 
+                 "eqr binary part",
+                 "ppt binary part",
                  "doy binary part",
                  "waterbody_type binary part")
 Z
@@ -3449,145 +3448,145 @@ Z
 # Round 3: dropped waterbody_type from binary model
 #	Specify the model formula
 # full model
-fZA.mesh2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from count part
-fZA.mesh2.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.1  <- AllY ~ -1 +
+  Intercept.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # ppt from count part
-fZA.mesh2.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # tmax from count part
-fZA.mesh2.3  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.3  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # doy from count part
-fZA.mesh2.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # waterbpdy_type from count part
-fZA.mesh2.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from binary part
-fZA.mesh2.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # ppt from binary part
-fZA.mesh2.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # doy from binary part
-fZA.mesh2.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  doy.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh2.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  doy.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde2)
 
 
 # fit the models
 ZANB.mesh2 <- inla(fZA.mesh2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3598,7 +3597,7 @@ ZANB.mesh2 <- inla(fZA.mesh2,
 
 
 ZANB.mesh2.1 <- inla(fZA.mesh2.1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3609,7 +3608,7 @@ ZANB.mesh2.1 <- inla(fZA.mesh2.1,
 
 
 ZANB.mesh2.2 <- inla(fZA.mesh2.2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3620,7 +3619,7 @@ ZANB.mesh2.2 <- inla(fZA.mesh2.2,
 
 
 ZANB.mesh2.3 <- inla(fZA.mesh2.3,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3631,7 +3630,7 @@ ZANB.mesh2.3 <- inla(fZA.mesh2.3,
 
 
 ZANB.mesh2.4 <- inla(fZA.mesh2.4,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3642,7 +3641,7 @@ ZANB.mesh2.4 <- inla(fZA.mesh2.4,
 
 
 ZANB.mesh2.5 <- inla(fZA.mesh2.5,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3653,7 +3652,7 @@ ZANB.mesh2.5 <- inla(fZA.mesh2.5,
 
 
 ZANB.mesh2.6 <- inla(fZA.mesh2.6,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3664,7 +3663,7 @@ ZANB.mesh2.6 <- inla(fZA.mesh2.6,
 
 
 ZANB.mesh2.7 <- inla(fZA.mesh2.7,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3675,7 +3674,7 @@ ZANB.mesh2.7 <- inla(fZA.mesh2.7,
 
 
 ZANB.mesh2.9 <- inla(fZA.mesh2.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -3696,19 +3695,19 @@ DIC.ZANB.mesh2.7 = sum(tapply(ZANB.mesh2.7$dic$local.dic, ZANB.mesh2.7$dic$famil
 DIC.ZANB.mesh2.9 = sum(tapply(ZANB.mesh2.9$dic$local.dic, ZANB.mesh2.9$dic$family, sum))
 
 Z <- matrix(nrow = 9, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh2, 
-           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.4, DIC.ZANB.mesh2.5, 
+Z[,1] <- c(DIC.ZANB.mesh2,
+           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.4, DIC.ZANB.mesh2.5,
            DIC.ZANB.mesh2.6, DIC.ZANB.mesh2.7, DIC.ZANB.mesh2.9)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "ppt count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "ppt count part",
                  "tmax count part",
                  "doy count part",
                  "waterbody_type count part",
-                 "eqr binary part", 
-                 "ppt binary part", 
+                 "eqr binary part",
+                 "ppt binary part",
                  "doy binary part")
 Z
 (model2drop <- rownames(Z)[which.min(Z)])
@@ -3732,122 +3731,122 @@ Z
 # Round 4: dropped doy from count part model
 #	Specify the model formula
 # full model
-fZA.mesh2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from count part
-fZA.mesh2.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.1  <- AllY ~ -1 +
+  Intercept.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # ppt from count part
-fZA.mesh2.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # tmax from count part
-fZA.mesh2.3  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.3  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # waterbpdy_type from count part
-fZA.mesh2.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from binary part
-fZA.mesh2.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  ppt.01 + 
-  doy.01 + 
+fZA.mesh2.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  ppt.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # ppt from binary part
-fZA.mesh2.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # doy from binary part
-fZA.mesh2.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh2.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde2)
 
 
 # fit the models
 ZANB.mesh2 <- inla(fZA.mesh2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3858,7 +3857,7 @@ ZANB.mesh2 <- inla(fZA.mesh2,
 
 
 ZANB.mesh2.1 <- inla(fZA.mesh2.1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3869,7 +3868,7 @@ ZANB.mesh2.1 <- inla(fZA.mesh2.1,
 
 
 ZANB.mesh2.2 <- inla(fZA.mesh2.2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3880,7 +3879,7 @@ ZANB.mesh2.2 <- inla(fZA.mesh2.2,
 
 
 ZANB.mesh2.3 <- inla(fZA.mesh2.3,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3891,7 +3890,7 @@ ZANB.mesh2.3 <- inla(fZA.mesh2.3,
 
 
 ZANB.mesh2.5 <- inla(fZA.mesh2.5,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3902,7 +3901,7 @@ ZANB.mesh2.5 <- inla(fZA.mesh2.5,
 
 
 ZANB.mesh2.6 <- inla(fZA.mesh2.6,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3913,7 +3912,7 @@ ZANB.mesh2.6 <- inla(fZA.mesh2.6,
 
 
 ZANB.mesh2.7 <- inla(fZA.mesh2.7,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -3924,7 +3923,7 @@ ZANB.mesh2.7 <- inla(fZA.mesh2.7,
 
 
 ZANB.mesh2.9 <- inla(fZA.mesh2.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -3944,18 +3943,18 @@ DIC.ZANB.mesh2.7 = sum(tapply(ZANB.mesh2.7$dic$local.dic, ZANB.mesh2.7$dic$famil
 DIC.ZANB.mesh2.9 = sum(tapply(ZANB.mesh2.9$dic$local.dic, ZANB.mesh2.9$dic$family, sum))
 
 Z <- matrix(nrow = 8, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh2, 
-           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.5, 
+Z[,1] <- c(DIC.ZANB.mesh2,
+           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.5,
            DIC.ZANB.mesh2.6, DIC.ZANB.mesh2.7, DIC.ZANB.mesh2.9)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "ppt count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "ppt count part",
                  "tmax count part",
                  "waterbody_type count part",
-                 "eqr binary part", 
-                 "ppt binary part", 
+                 "eqr binary part",
+                 "ppt binary part",
                  "doy binary part")
 Z
 (model2drop <- rownames(Z)[which.min(Z)])
@@ -3978,101 +3977,101 @@ Z
 # Round 5: dropped ppt from binary part model
 #	Specify the model formula
 # full model
-fZA.mesh2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from count part
-fZA.mesh2.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.1  <- AllY ~ -1 +
+  Intercept.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # ppt from count part
-fZA.mesh2.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # tmax from count part
-fZA.mesh2.3  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.3  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # waterbody_type from count part
-fZA.mesh2.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from binary part
-fZA.mesh2.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  doy.01 + 
+fZA.mesh2.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # doy from binary part
-fZA.mesh2.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh2.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  tmax.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde2)
 
 
 # fit the models
 ZANB.mesh2 <- inla(fZA.mesh2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4083,7 +4082,7 @@ ZANB.mesh2 <- inla(fZA.mesh2,
 
 
 ZANB.mesh2.1 <- inla(fZA.mesh2.1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4094,7 +4093,7 @@ ZANB.mesh2.1 <- inla(fZA.mesh2.1,
 
 
 ZANB.mesh2.2 <- inla(fZA.mesh2.2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4105,7 +4104,7 @@ ZANB.mesh2.2 <- inla(fZA.mesh2.2,
 
 
 ZANB.mesh2.3 <- inla(fZA.mesh2.3,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4116,7 +4115,7 @@ ZANB.mesh2.3 <- inla(fZA.mesh2.3,
 
 
 ZANB.mesh2.5 <- inla(fZA.mesh2.5,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4127,7 +4126,7 @@ ZANB.mesh2.5 <- inla(fZA.mesh2.5,
 
 
 ZANB.mesh2.6 <- inla(fZA.mesh2.6,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4138,7 +4137,7 @@ ZANB.mesh2.6 <- inla(fZA.mesh2.6,
 
 
 ZANB.mesh2.9 <- inla(fZA.mesh2.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -4157,17 +4156,17 @@ DIC.ZANB.mesh2.6 = sum(tapply(ZANB.mesh2.6$dic$local.dic, ZANB.mesh2.6$dic$famil
 DIC.ZANB.mesh2.9 = sum(tapply(ZANB.mesh2.9$dic$local.dic, ZANB.mesh2.9$dic$family, sum))
 
 Z <- matrix(nrow = 7, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh2, 
-           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.5, 
+Z[,1] <- c(DIC.ZANB.mesh2,
+           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.3, DIC.ZANB.mesh2.5,
            DIC.ZANB.mesh2.6, DIC.ZANB.mesh2.9)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "ppt count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "ppt count part",
                  "tmax count part",
                  "waterbody_type count part",
-                 "eqr binary part", 
+                 "eqr binary part",
                  "doy binary part")
 Z
 (model2drop <- rownames(Z)[which.min(Z)])
@@ -4190,82 +4189,82 @@ Z
 # Round 6: dropped tmax from count part model
 #	Specify the model formula
 # full model
-fZA.mesh2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from count part
-fZA.mesh2.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  ppt.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.1  <- AllY ~ -1 +
+  Intercept.pos +
+  ppt.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # ppt from count part
-fZA.mesh2.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # waterbody_type from count part
-fZA.mesh2.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  doy.01 + 
+fZA.mesh2.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # eqr from binary part
-fZA.mesh2.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  doy.01 + 
+fZA.mesh2.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  doy.01 +
   f(w01, model = spde2)
 
 # doy from binary part
-fZA.mesh2.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  ppt.pos + 
-  waterbody_type.pos + 
-  f(wpos, model = spde2) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh2.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  ppt.pos +
+  waterbody_type.pos +
+  f(wpos, model = spde2) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde2)
 
 
 # fit the models
 ZANB.mesh2 <- inla(fZA.mesh2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4276,7 +4275,7 @@ ZANB.mesh2 <- inla(fZA.mesh2,
 
 
 ZANB.mesh2.1 <- inla(fZA.mesh2.1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4287,7 +4286,7 @@ ZANB.mesh2.1 <- inla(fZA.mesh2.1,
 
 
 ZANB.mesh2.2 <- inla(fZA.mesh2.2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4298,7 +4297,7 @@ ZANB.mesh2.2 <- inla(fZA.mesh2.2,
 
 
 ZANB.mesh2.5 <- inla(fZA.mesh2.5,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4309,7 +4308,7 @@ ZANB.mesh2.5 <- inla(fZA.mesh2.5,
 
 
 ZANB.mesh2.6 <- inla(fZA.mesh2.6,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh2),
@@ -4320,7 +4319,7 @@ ZANB.mesh2.6 <- inla(fZA.mesh2.6,
 
 
 ZANB.mesh2.9 <- inla(fZA.mesh2.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh2),
@@ -4338,16 +4337,16 @@ DIC.ZANB.mesh2.6 = sum(tapply(ZANB.mesh2.6$dic$local.dic, ZANB.mesh2.6$dic$famil
 DIC.ZANB.mesh2.9 = sum(tapply(ZANB.mesh2.9$dic$local.dic, ZANB.mesh2.9$dic$family, sum))
 
 Z <- matrix(nrow = 6, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh2, 
-           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.5, 
+Z[,1] <- c(DIC.ZANB.mesh2,
+           DIC.ZANB.mesh2.1, DIC.ZANB.mesh2.2, DIC.ZANB.mesh2.5,
            DIC.ZANB.mesh2.6, DIC.ZANB.mesh2.9)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "ppt count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "ppt count part",
                  "waterbody_type count part",
-                 "eqr binary part", 
+                 "eqr binary part",
                  "doy binary part")
 Z
 (model2drop <- rownames(Z)[which.min(Z)])
@@ -4384,8 +4383,8 @@ Xpos    <- as.matrix(X[, c(1:3, 6),])
 X01.1   <- as.matrix(X01[, c(1:2, 5)])
 
 A2.m <- as.matrix(A2)
-wPos   <- ZANB.mesh2$summary.random$wpos$mean 
-w01    <- ZANB.mesh2$summary.random$w01$mean 
+wPos   <- ZANB.mesh2$summary.random$wpos$mean
+w01    <- ZANB.mesh2$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
 P0 <- (k / (mu + k))^k
@@ -4411,7 +4410,7 @@ plot(x  = muZANB,
 
 # Simulation study ZINB model with spatial correlation
 ZANB.mesh2.sim <- inla(fZA.mesh2,
-                       family = c("zeroinflatednbinomial0", "binomial"),  
+                       family = c("zeroinflatednbinomial0", "binomial"),
                        control.family = list(list(hyper = HyperZap),
                                              list()),
                        data = inla.stack.data(Stack.ZA.mesh2),
@@ -4461,14 +4460,14 @@ for (i in 1:NSim) {
   wPos <- SimData[[i]]$latent[RowNum.wPos]
   w01 <- SimData[[i]]$latent[RowNum.w01]
   k   <- SimData[[i]]$hyperpar[1] # strictly speaking, simulated values should be used, but there is a tendency for k parameters to not look very random
-  
+
   mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
   Pi <- exp(X01.1 %*% Beta01 + A2.m %*% w01) / (1 + exp(X01.1 %*% Beta01 + A2.m %*% w01))
-  
+
   # Generate the values using the VGAM function
-  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)  
+  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)
   ZerosZANBSpat[i] <- sum(YNBSpat[, i] == 0)
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -4477,15 +4476,15 @@ for (i in 1:NSim) {
 close(pb)
 
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZANBSpat), 
+plot(table(ZerosZANBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 2000),
      main = "Simulation results")
-points(x = sum(df$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(df$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(df$vec_abund == 0) > ZerosZANBSpat) / 10000
@@ -4524,8 +4523,8 @@ scaled_residuals <- residuals(residuals_sim)
 hist(scaled_residuals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR            = df$eqr, 
-                         PPT            = df$ppt, 
+predictors <- data.frame(EQR            = df$eqr,
+                         PPT            = df$ppt,
                          TMAX           = df$tmax,
                          DOY            = df$doy,
                          WATERBODY_TYPE = df$waterbody_type)
@@ -4542,34 +4541,34 @@ for (i in 1:ncol(predictors)) {
 }
 
 # Results of the ZANB model with spatial correlation
-wpm.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$mean  
-wpm.ZANB.01  <- ZANB.mesh2$summary.random$w01$mean  
-wsd.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$sd  
-wsd.ZANB.01  <- ZANB.mesh2$summary.random$w01$sd  
+wpm.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$mean
+wpm.ZANB.01  <- ZANB.mesh2$summary.random$w01$mean
+wsd.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$sd
+wsd.ZANB.01  <- ZANB.mesh2$summary.random$w01$sd
 
 # Plot the spatial random field again, and add white space for the non-study area
 par(mfrow = c(2, 2), mar = c(5,5,2,2), cex.lab = 1.5)
 PlotField(field = wpm.ZANB.Pos, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.Pos, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -4577,26 +4576,26 @@ plot(Lithuania.UTM, add = TRUE)
 # Binary part of the ZANB
 PlotField(field = wpm.ZANB.01, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.01, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -4604,12 +4603,12 @@ plot(Lithuania.UTM, add = TRUE)
 
 
 #========== Extract important data from optimal ZANB model ==========
-#===== Plot spatial random field ===== 
+#===== Plot spatial random field =====
 # Results of the ZANB model with spatial correlation
-wpm.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$mean  
-wpm.ZANB.01  <- ZANB.mesh2$summary.random$w01$mean  
-wsd.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$sd  
-wsd.ZANB.01  <- ZANB.mesh2$summary.random$w01$sd  
+wpm.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$mean
+wpm.ZANB.01  <- ZANB.mesh2$summary.random$w01$mean
+wsd.ZANB.Pos <- ZANB.mesh2$summary.random$wpos$sd
+wsd.ZANB.01  <- ZANB.mesh2$summary.random$w01$sd
 
 # count part of the model
 options(scipen = 999)
@@ -4638,12 +4637,12 @@ text(x = min(range(mesh2$loc[,1]) + 210000),  # x position in the middle of the 
 
 PlotField(field = wsd.ZANB.Pos, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -4675,17 +4674,17 @@ text(x = min(range(mesh2$loc[,1]) + 210000),  # x position in the middle of the 
 
 PlotField(field = wsd.ZANB.01, mesh = mesh2, xlim = range(mesh2$loc[,1]), ylim = range(mesh2$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
-#===== Make neat table of model outputs ===== 
+#===== Make neat table of model outputs =====
 summary(ZANB.mesh2)
 
 # Extract fixed effects
@@ -4777,7 +4776,7 @@ sigma_u_upper <- ZANB.mesh2$summary.hyperpar[c(4, 6), "0.975quant"]
 
 # Create a data frame for the custom hyperparameters table
 custom_hyper_table <- data.frame(
-  Parameter = c("Range for wpos (km)", "Range for w01 (km)", 
+  Parameter = c("Range for wpos (km)", "Range for w01 (km)",
                 "Stdev for wpos (sigma_u)", "Stdev for w01 (sigma_u)"),
   Mean = c(range_km, sigma_u),
   SD = c(range_sd_km, sigma_u_sd),
@@ -4839,7 +4838,7 @@ save_gt_custom_hyper_table(
 # )
 
 
-#==================== Clean up =================== 
+#==================== Clean up ===================
 library(pacman)
 # Clear data
 rm(list = ls())  # Removes all objects from environment
@@ -4853,4 +4852,4 @@ graphics.off()  # Clears plots, closes all graphics devices
 cat("\014")  # Mimics ctrl+L
 # Clear mind :)
 
-#==================== End =================== 
+#==================== End ===================

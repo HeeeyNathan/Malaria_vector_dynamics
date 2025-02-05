@@ -17,21 +17,21 @@ source("Additional functions/HighstatLibV11.R")
 #################################################
 # Load the data
 # Calculated index data from rivers (2013 - 2022)
-river_indices <- as_tibble(read.csv("Data/Diptera_indices_wLandcover_and_ENV_edited.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names=FALSE)) %>% 
-  clean_names() %>% 
-  dplyr::select(-c(21:25, 31:35)) %>% 
-  filter(waterbody_type == "river") %>% 
-  filter(year >= 2013 & year <= 2022) %>% 
+river_indices <- as_tibble(read.csv("Data/Diptera_indices_wLandcover_and_ENV_edited.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names=FALSE)) %>%
+  clean_names() %>%
+  dplyr::select(-c(21:25, 31:35)) %>%
+  filter(waterbody_type == "river") %>%
+  filter(year >= 2013 & year <= 2022) %>%
   mutate(fyear = factor(year),
          fsite_id = factor(site_id),
-         date = as.Date(date, format = "%d/%m/%Y"), 
-         friver_type = factor(river_type, levels = c("1", "2", "3", "4", "5"), 
+         date = as.Date(date, format = "%d/%m/%Y"),
+         friver_type = factor(river_type, levels = c("1", "2", "3", "4", "5"),
                               labels = c("Type1", "Type2", "Type3", "Type4", "Type5"),
                               ordered = T),
-         fstate = factor(state, levels = c("N", "HM", "A"), 
+         fstate = factor(state, levels = c("N", "HM", "A"),
                          labels = c("Natural", "HeavilyModified", "Artificial"),
                          ordered = T),
-         feqc = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"), 
+         feqc = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"),
                        labels = c("Bad", "Poor", "Moderate", "Good", "High"),
                        ordered = T),
          waterbody_name = factor(waterbody_name),
@@ -119,20 +119,20 @@ data("worldHiresMapEnv")
 mapdata <- data("worldHiresMapEnv")
 range(river_indices$latitude) # in decimal degree format
 range(river_indices$longitude) # in decimal degree format
-BoundaryPoly <- map("world", 
+BoundaryPoly <- map("world",
                     regions = c("lithuania", "poland", "russia", "latvia", "belarus"),
-                    fill = TRUE, 
+                    fill = TRUE,
                     col = "blue",
                     boundary = TRUE,
                     interior = TRUE,
-                    plot = TRUE, 
+                    plot = TRUE,
                     ylim = c(53, 57),
                     xlim = c(21, 27))
 points(x = river_indices$longitude, y = river_indices$latitude, col = "yellow", pch = 1, cex = 1)
 points(x = river_indices$longitude, y = river_indices$latitude, col = "yellow", pch = 20, cex = 1)
 
 IDs <- sapply(strsplit(BoundaryPoly$names, ":"), function(x) x[1])
-BoundarySP <- map2SpatialPolygons(map = BoundaryPoly, 
+BoundarySP <- map2SpatialPolygons(map = BoundaryPoly,
                                   IDs = IDs,
                                   proj4string = CRS("+proj=longlat +datum=WGS84"))
 
@@ -143,12 +143,12 @@ plot(BoundarySP,
 points(x = river_indices$longitude, y = river_indices$latitude)
 
 #Make the boundary less detailed
-BoundarySP.smooth <- thinnedSpatialPoly(BoundarySP, 
-                                        tolerance = 0.05, 
-                                        minarea= 0.05, 
-                                        topologyPreserve = TRUE, 
+BoundarySP.smooth <- thinnedSpatialPoly(BoundarySP,
+                                        tolerance = 0.05,
+                                        minarea= 0.05,
+                                        topologyPreserve = TRUE,
                                         avoidGEOS = FALSE)
-Boundary.UTM <- spTransform(BoundarySP, 
+Boundary.UTM <- spTransform(BoundarySP,
                             CRS("+proj=utm +zone=34 +datum=WGS84"))
 
 plot(Boundary.UTM)
@@ -160,36 +160,38 @@ plot(table(river_indices$vec_abund), ylab = "vec_abund")
 sum(river_indices$vec_abund == 0) /nrow(river_indices) # 63% of zeros
 # Lots of zeros!
 
-pts <- river_indices[, c("longitude" , "latitude", "vec_abund")] 
-coordinates(pts) <- c("longitude", "latitude") 
-migmap <- gmap(x = pts, 
-               type = "hybrid", 
+map_key <-
+
+pts <- river_indices[, c("longitude" , "latitude", "vec_abund")]
+coordinates(pts) <- c("longitude", "latitude")
+migmap <- gmap(x = pts,
+               type = "hybrid",
                zoom = 7,
-               map_key = "AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc")
+               map_key = map_key)
 par(mfrow = c(1,1))
 plot(migmap)
 
 river_indicesPos <- river_indices[river_indices[,"vec_abund"] > 0, ]
-ptsPos    <- river_indicesPos[, c("longitude" , "latitude", "vec_abund")] 
-coordinates(ptsPos) <- c("longitude", "latitude") 
+ptsPos    <- river_indicesPos[, c("longitude" , "latitude", "vec_abund")]
+coordinates(ptsPos) <- c("longitude", "latitude")
 
 MyCex <- 5 * river_indicesPos[,"vec_abund"] / max(river_indicesPos[,"vec_abund"]) + 0.5
-points(Mercator(ptsPos), 
-       col = "darkred", 
-       pch = 20, 
+points(Mercator(ptsPos),
+       col = "darkred",
+       pch = 20,
        cex = MyCex)
 
 river_indices01 <- river_indices[river_indices[,"vec_abund"] == 0,]
-pts.0 <- river_indices01[, c("longitude" , "latitude", "vec_abund")] 
-coordinates(pts.0) <- c("longitude", "latitude") 
+pts.0 <- river_indices01[, c("longitude" , "latitude", "vec_abund")]
+coordinates(pts.0) <- c("longitude", "latitude")
 
-# points(Mercator(pts.0), 
-#        col = "darkblue", 
-#        pch = 20, 
+# points(Mercator(pts.0),
+#        col = "darkblue",
+#        pch = 20,
 #        cex = 1)
-points(Mercator(pts.0), 
-       col = "darkblue", 
-       pch = 1, 
+points(Mercator(pts.0),
+       col = "darkblue",
+       pch = 1,
        cex = 1)
 # The function gmap is in Mercator coordinates.
 # To superimpose the sampling locations, we need
@@ -212,8 +214,8 @@ Mypairs(river_indices[,MyX])
 corvif(river_indices[,MyX])
 
 # Missing values?
-colSums(is.na(river_indices))  
-100 * colSums(is.na(river_indices)) / nrow(river_indices)  
+colSums(is.na(river_indices))
+100 * colSums(is.na(river_indices)) / nrow(river_indices)
 which(is.na(river_indices$eqr)) # observation #467
 
 # remove observation with missing EQR data
@@ -269,7 +271,7 @@ river_indices$tmax_std            <- MyStd(river_indices$tmax)
 river_indices$tmin_std            <- MyStd(river_indices$tmin)
 river_indices$ws_std              <- MyStd(river_indices$ws)
 
-Poi <- inla(vec_abund ~ fyear + eqr_std + 
+Poi <- inla(vec_abund ~ fyear + eqr_std +
               agricultural_std + artificial_std + forest_std +
               ppt_std + tmax_std + tmin_std + ws_std,
             family = "poisson",
@@ -294,70 +296,70 @@ Dispersion # 172.2004
 # D. Zero inflation?       ==> ZIP / ZAP
 # E. Large variance?       ==> NB or GeneSBlized Poisson
 # F. Correlation?          ==> GLMM
-# G. Non-linear patterns   ==> GAM 
-# H. Wrong link function   ==> Change it 
+# G. Non-linear patterns   ==> GAM
+# H. Wrong link function   ==> Change it
 
 # A. Outliers?
 par(mfrow = c(1,1), mar = c(5,5,2,2), cex.lab = 1.5)
-plot(x = muPoi, 
+plot(x = muPoi,
      y = EPoi,
      xlab = "Fitted values",
      ylab = "Pearson residuals")
-abline(h = 0, lty = 2)     
+abline(h = 0, lty = 2)
 # No clear outliers.
 
 # Plot residuals vs each covariate in the model
 # Each covariate not in the model.
 par(mfrow = c(3,3), mar = c(5,5,2,2), cex.lab = 1.5)
-plot(x = river_indices$fyear, 
+plot(x = river_indices$fyear,
      y = EPoi,
      xlab = "Year",
      ylab = "Pearson residuals")
 abline(h = 0, lty = 2)
 
-plot(x = river_indices$eqr, 
+plot(x = river_indices$eqr,
      y = EPoi,
      xlab = "EQR",
      ylab = "Pearson residuals")
 abline(h = 0, lty = 2)
 
-plot(x = river_indices$agricultural_areas_200m, 
+plot(x = river_indices$agricultural_areas_200m,
      y = EPoi,
      xlab = "Agricultural areas",
      ylab = "Pearson residuals")
-abline(h = 0, lty = 2) 
+abline(h = 0, lty = 2)
 
-plot(x = river_indices$artificial_surfaces_200m, 
+plot(x = river_indices$artificial_surfaces_200m,
      y = EPoi,
      xlab = "Artificial surfaces",
      ylab = "Pearson residuals")
-abline(h = 0, lty = 2) 
+abline(h = 0, lty = 2)
 
-plot(x = river_indices$forest_and_semi_natural_areas_200m, 
+plot(x = river_indices$forest_and_semi_natural_areas_200m,
      y = EPoi,
      xlab = "Forest & semi-natural areas",
      ylab = "Pearson residuals")
-abline(h = 0, lty = 2) 
+abline(h = 0, lty = 2)
 
-plot(x = river_indices$ppt, 
+plot(x = river_indices$ppt,
      y = EPoi,
      xlab = "ppt",
      ylab = "Pearson residuals")
-abline(h = 0, lty = 2) 
+abline(h = 0, lty = 2)
 
-plot(x = river_indices$tmax, 
+plot(x = river_indices$tmax,
      y = EPoi,
      xlab = "tmax",
      ylab = "Pearson residuals")
 abline(h = 0, lty = 2)
 
-plot(x = river_indices$tmin, 
+plot(x = river_indices$tmin,
      y = EPoi,
      xlab = "tmin",
      ylab = "Pearson residuals")
 abline(h = 0, lty = 2)
 
-plot(x = river_indices$ws, 
+plot(x = river_indices$ws,
      y = EPoi,
      xlab = "ws",
      ylab = "Pearson residuals")
@@ -369,52 +371,52 @@ par(mfrow = c(1,1), mar = c(5,5,2,2), cex.lab = 1.5)
 # We can fit a smoother on the residuals and see whether it tells us something.
 library(mgcv)
 par(mfrow = c(3,3), mar = c(5,5,2,2), cex.lab = 1.5)
-T1 <- gam(EPoi ~ s(eqr), 
+T1 <- gam(EPoi ~ s(eqr),
           data = river_indices)
 summary(T1)
 plot(T1)
 # Not really convincing
 
-T2 <- gam(EPoi ~ s(agricultural_areas_200m), 
+T2 <- gam(EPoi ~ s(agricultural_areas_200m),
           data = river_indices)
 summary(T2)
 plot(T2)
 # Not really convincing
 
-T3 <- gam(EPoi ~ s(artificial_surfaces_200m), 
+T3 <- gam(EPoi ~ s(artificial_surfaces_200m),
           data = river_indices)
 summary(T3)
 plot(T3)
 # Not really convincing
 
-T4 <- gam(EPoi ~ s(forest_and_semi_natural_areas_200m), 
+T4 <- gam(EPoi ~ s(forest_and_semi_natural_areas_200m),
           data = river_indices)
 summary(T4)
 plot(T4)
 # Some non-linearity
 # Not really convincing
 
-T5 <- gam(EPoi ~ s(ppt), 
+T5 <- gam(EPoi ~ s(ppt),
           data = river_indices)
 summary(T5)
 plot(T5)
 # Not really convincing
 
-T6 <- gam(EPoi ~ s(tmax), 
+T6 <- gam(EPoi ~ s(tmax),
           data = river_indices)
 summary(T6)
 plot(T6)
 # Some non-linearity
 # Not really convincing
 
-T7 <- gam(EPoi ~ s(tmin), 
+T7 <- gam(EPoi ~ s(tmin),
           data = river_indices)
 summary(T7)
 plot(T7)
 # Some non-linearity
 # Not really convincing
 
-T8 <- gam(EPoi ~ s(ws), 
+T8 <- gam(EPoi ~ s(ws),
           data = river_indices)
 summary(T8)
 plot(T8)
@@ -432,10 +434,10 @@ par(mfrow = c(1,1), mar = c(5,5,2,2), cex.lab = 1.5)
 mydata <- data.frame(EPoi, river_indices$Ykm, river_indices$Xkm)
 coordinates(mydata)    <- c("river_indices.Ykm", "river_indices.Xkm")
 GLM.Poi <- variogram(EPoi ~ 1, cutoff = 200, mydata,  cressie = TRUE)
-plot(GLM.Poi, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(GLM.Poi,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Is this a horizontal band of points? No!
 
@@ -443,8 +445,8 @@ plot(GLM.Poi,
 # Simulation study
 I2 <- inla(vec_abund ~ fyear + eqr_std +
              agricultural_std + artificial_std + forest_std +
-             ppt_std + tmax_std + tmin_std + ws_std, 
-           family = "poisson", 
+             ppt_std + tmax_std + tmin_std + ws_std,
+           family = "poisson",
            data = river_indices,
            control.compute=list(config = TRUE))
 
@@ -525,7 +527,7 @@ table(zeros)
 # we had 1148 zeros,etc......
 # Your results will be different as mine.
 
-# Just type 
+# Just type
 Ysim[,1]
 Ysim[,2]
 Ysim[,3]
@@ -533,16 +535,16 @@ Ysim[,3]
 
 #Let's plot this as a table
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(zeros), 
+plot(table(zeros),
      #axes = FALSE,
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 1000 simulated data sets",
      xlim = c(0, 1000),
      main = "Simulation results")
-points(x = sum(river_indices$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(river_indices$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 # The red dot is the number of zeros in the original data set.
 # The data simulated from the Poisson model does not contain enough zeros.
@@ -554,13 +556,13 @@ Loc <- cbind(river_indices$Xutm, river_indices$Yutm)
 D   <- dist(Loc)
 
 par(mfrow = c(1,2), mar = c(5,5,2,2), cex.lab = 1.5)
-hist(D / 1000, 
+hist(D / 1000,
      freq = TRUE,
-     main = "", 
+     main = "",
      xlab = "Distance between sites (km)",
      ylab = "Frequency")
-plot(x = sort(D) / 1000, 
-     y = (1:length(D))/length(D), 
+plot(x = sort(D) / 1000,
+     y = (1:length(D))/length(D),
      type = "l",
      xlab = "Distance between sites (km)",
      ylab = "Cumulative proportion")
@@ -580,10 +582,10 @@ ConvHull <- inla.nonconvex.hull(Loc, convex = 50 * 1000)
 # closer to the points. Saves some computing time
 # during this course. Maybe not use it for a paper.
 ConvHull <- inla.nonconvex.hull(Loc)
-mesh1 <- inla.mesh.2d(boundary = ConvHull, 
-                      max.edge = c(1, 5) * MaxEdge, 
+mesh1 <- inla.mesh.2d(boundary = ConvHull,
+                      max.edge = c(1, 5) * MaxEdge,
                       cutoff = MaxEdge / 5)
-mesh1$n 
+mesh1$n
 # 3600 vertices
 
 par(mfrow = c(1,1), mar=c(1, 1, 1, 1))
@@ -594,8 +596,8 @@ points(Loc, col = 2, pch = 16, cex = 1)
 A1  <- inla.spde.make.A(mesh1, loc = Loc)
 
 # Define the SPDE.
-spde1 <- inla.spde2.pcmatern(mesh1, 
-                             prior.range = c(50 * 1000, 0.5), # 0.5 means we do not know what the range is, it can be smaller or larger than 50km 
+spde1 <- inla.spde2.pcmatern(mesh1,
+                             prior.range = c(50 * 1000, 0.5), # 0.5 means we do not know what the range is, it can be smaller or larger than 50km
                              prior.sigma = c(1.5, 0.01))
 # This is tricky stuff. We need to specify this:
 # P(Range < or > range0) = 0.5  and P(sigma > sigma0) = 0.01
@@ -610,7 +612,7 @@ spde1 <- inla.spde2.pcmatern(mesh1,
 
 # Define the spatial field.
 w1.index <- inla.spde.make.index(
-  name    = 'w', 
+  name    = 'w',
   n.spde  = spde1$n.spde)
 
 # Defining a stack
@@ -632,8 +634,8 @@ X <- data.frame(
   Artificial  = Xm[, 12],
   Forest      = Xm[, 13],
   ppt         = Xm[, 14],
-  tmax        = Xm[, 15],  
-  tmin        = Xm[, 16], 
+  tmax        = Xm[, 15],
+  tmin        = Xm[, 16],
   ws          = Xm[, 17])
 
 N <- nrow(river_indices)
@@ -649,9 +651,9 @@ Stack.mesh1 <- inla.stack(
 )
 
 # Defining a formula
-fPois.mesh1 <- y ~ -1 + Intercept + 
+fPois.mesh1 <- y ~ -1 + Intercept +
   fyear2014 + fyear2015 + fyear2016 + fyear2017 + fyear2018 + fyear2019 + fyear2020 + fyear2021 + fyear2022 +
-  Agriculture + Artificial + Forest + 
+  Agriculture + Artificial + Forest +
   ppt + tmax + tmin + ws +
   f(w, model = spde1)
 
@@ -672,38 +674,38 @@ summary(Pois.mesh1)
 PlotField <- function(field, mesh, ContourMap, xlim, ylim, Add=FALSE,...){
   stopifnot(length(field) == mesh$n)
   # Plotting region to be the same as the study area polygon
-  if (missing(xlim)) xlim <- ContourMap@bbox[1, ] 
+  if (missing(xlim)) xlim <- ContourMap@bbox[1, ]
   if (missing(ylim)) ylim <- ContourMap@bbox[2, ]
-  
-  # inla.mesh.projector: it creates a lattice using the mesh and specified ranges. 
-  proj <- inla.mesh.projector(mesh, 
-                              xlim = xlim, 
-                              ylim = ylim, 
+
+  # inla.mesh.projector: it creates a lattice using the mesh and specified ranges.
+  proj <- inla.mesh.projector(mesh,
+                              xlim = xlim,
+                              ylim = ylim,
                               dims = c(600, 600))
-  # The function inla.mesh.project can then 
+  # The function inla.mesh.project can then
   # be used to project the w's on this grid.
   field.proj <- inla.mesh.project(proj, field)
-  
+
   # And plot the whole thing
-  image.plot(list(x = proj$x, 
+  image.plot(list(x = proj$x,
                   y = proj$y,
-                  z = field.proj), 
-             xlim = xlim, 
+                  z = field.proj),
+             xlim = xlim,
              ylim = ylim,
              asp = 1,
              add = Add,
-             ...)  
+             ...)
 }
 
 
 summary(Pois.mesh1)
 
-# Plot the spatial random field 
-w1.pm <- Pois.mesh1$summary.random$w$mean  
-w1.sd <- Pois.mesh1$summary.random$w$sd  
+# Plot the spatial random field
+w1.pm <- Pois.mesh1$summary.random$w$mean
+w1.sd <- Pois.mesh1$summary.random$w$sd
 
-PlotField(field = w1.pm, 
-          mesh = mesh1, 
+PlotField(field = w1.pm,
+          mesh = mesh1,
           xlim = range(mesh1$loc[,1]),
           ylim = range(mesh1$loc[,2]))
 
@@ -712,17 +714,17 @@ PlotField(field = w1.pm,
 
 # Add the sampling locations (in UTM)
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 
 # Add the boundary (in UTM)
-Boundary.UTM = spTransform(BoundarySP.smooth, 
+Boundary.UTM = spTransform(BoundarySP.smooth,
                         CRS("+proj=utm +zone=34 +datum=WGS84"))
 plot(Boundary.UTM, add = TRUE)
 
-# Model validation 
+# Model validation
 # Plot fitted values versus observed data
 mu.SpatPois <- Pois.mesh1$summary.fitted.values[1:1436, "mean"]
 par(mar = c(5,5,2,2), cex.lab = 1.5)
@@ -741,7 +743,7 @@ Pois.mesh1.sim <- inla(fPois.mesh1,
 
 set.seed(12345)
 NSim          <- 10000
-SimData       <- inla.posterior.sample(n = NSim, 
+SimData       <- inla.posterior.sample(n = NSim,
                                        result = Pois.mesh1.sim)
 N             <- nrow(river_indices)
 ZerosPoisSpat <- vector(length = NSim)
@@ -780,15 +782,15 @@ for (i in 1:NSim){
 
 # Figure 19.12
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosPoisSpat), 
+plot(table(ZerosPoisSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 200),
      main = "Simulation results")
-points(x = sum(Skate$SB == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(Skate$SB == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(Skate$SB == 0) > ZerosPoisSpat) / 10000
@@ -798,7 +800,7 @@ sum(Skate$SB == 0)
 
 
 
-# Make a stack. 
+# Make a stack.
 # "EQR", "latitude", "longitude",
 # "Agricultural.areas_200m",  "Artificial.surfaces_200m", "Forest.and.semi.natural.areas_200m",
 # "ppt", "tmax", "tmin", "ws"
@@ -823,21 +825,21 @@ Covariates <- data.frame(
   Artificial  = MyStd(river_indices$Artificial.surfaces_200m),
   Forest      = MyStd(river_indices$Forest.and.semi.natural.areas_200m),
   ppt         = MyStd(river_indices$ppt),
-  tmax        = MyStd(river_indices$tmax),  
+  tmax        = MyStd(river_indices$tmax),
   # tmin        = MyStd(river_indices$tmin),
   ws          = MyStd(river_indices$ws)
 )
 
 StackPoisGLM <- inla.stack(
   tag = "PoissonFit",
-  data = list(y = river_indices$vec_abund),  
-  A = list(1, APois),                 
+  data = list(y = river_indices$vec_abund),
+  A = list(1, APois),
   effects = list(
-    Covariates = Covariates, 
+    Covariates = Covariates,
     w = wPois.index))
 
 ###############################################################
-# CLEAN UP 
+# CLEAN UP
 library(pacman)
 # Clear data
 rm(list = ls())  # Removes all objects from environment

@@ -3,211 +3,211 @@
 #* Subsection 1.1: Data source----
 
 #' The data used in this exercise were provided by the Lithuanian
-#' Environmental Protection Agency (LEPA). If you want to use these data 
+#' Environmental Protection Agency (LEPA). If you want to use these data
 #' for any other purpose, please contact LEPA directly. Their website address
 #' is: https://aaa.lrv.lt/lt/
 
 #' The a subset of this data were also published in:
-#'  Baker, N.J., Baker, N.J., Pilotto, F., Welti, E.A.R., Osadčaja, D. & 
-#'  Palinauskas, V. (2024). Recovery or reorganisation? Long-term increases 
-#'  in riverine taxonomic and functional diversity are confounded by compositional 
+#'  Baker, N.J., Baker, N.J., Pilotto, F., Welti, E.A.R., Osadčaja, D. &
+#'  Palinauskas, V. (2024). Recovery or reorganisation? Long-term increases
+#'  in riverine taxonomic and functional diversity are confounded by compositional
 #'  dynamics. Hydrobiologia. https://link.springer.com/article/10.1007/s10750-024-05665-5
 
-#'  Sinclair, J.S., Welti, E.A.R., Altermatt, F., Álvarez-Cabria, M., Aroviita, J., 
-#'  Baker, N.J., Barešová, L., Barquín, J., Bonacina, L., Bonada, N., Cañedo-Argüelles, 
-#'  M., Csabai, Z., de Eyto, E., Dohet, A., Dörflinger, G., Eriksen, T.E., Evtimova, V., 
-#'  Feio, M.J., Ferréol, M., … Haase, P. 2024. Multi-decadal improvements in the ecological 
-#'  quality of European rivers are not consistently reflected in biodiversity metrics. 
+#'  Sinclair, J.S., Welti, E.A.R., Altermatt, F., Álvarez-Cabria, M., Aroviita, J.,
+#'  Baker, N.J., Barešová, L., Barquín, J., Bonacina, L., Bonada, N., Cañedo-Argüelles,
+#'  M., Csabai, Z., de Eyto, E., Dohet, A., Dörflinger, G., Eriksen, T.E., Evtimova, V.,
+#'  Feio, M.J., Ferréol, M., … Haase, P. 2024. Multi-decadal improvements in the ecological
+#'  quality of European rivers are not consistently reflected in biodiversity metrics.
 #'  Nature Ecology & Evolution, 8, 430-441. https://doi.org/10.1038/s41559-023-02305-4
 
 
 #* Subsection 1.2: Funding source----
 
-#'  The collation and processing of this dataset was supported by the Diana Osadcaja and 
-#'  the Lithuanian Environmental Protection Agency (https://aaa.lrv.lt/) who collected 
-#'  the data. The project was funded by the Lithuanian Research Council (project number 
+#'  The collation and processing of this dataset was supported by the Diana Osadcaja and
+#'  the Lithuanian Environmental Protection Agency (https://aaa.lrv.lt/) who collected
+#'  the data. The project was funded by the Lithuanian Research Council (project number
 #'  S-PD-22-72).
 
 
 #* Subsection 1.3: Background information----
 
 #' This dataset contains count data of 962 macroinvertebrate taxa (taxa is used due to
-#' mixed identification levels) collected from freshwater bodies across lithuania. 
-#' The initial biomonitoring dataset was created as part of Lithuania's national monitoring 
+#' mixed identification levels) collected from freshwater bodies across lithuania.
+#' The initial biomonitoring dataset was created as part of Lithuania's national monitoring
 #' scheme, in line with the European Union's Water Framwork Directive. The dataset spans
-#' a period from 2010 to 2023, covering both lentic (rivers) and lotic (lakes) freshwater 
-#' bodies. The dataset includes count data of macroinvertebrates from 953 sampling sites; 615 
-#' riverine sites and 338 lake sites. LEPA employs a staggered sampling approach, whereby 
+#' a period from 2010 to 2023, covering both lentic (rivers) and lotic (lakes) freshwater
+#' bodies. The dataset includes count data of macroinvertebrates from 953 sampling sites; 615
+#' riverine sites and 338 lake sites. LEPA employs a staggered sampling approach, whereby
 #' most sites are resampled in 3-year increments, with only a few sites (~20%) being sampled
-#' more consistently. 
-#' 
-#' For river sites (n = 615), the average number of sites sampled per year is 151, with 
-#' distances between sites averaging 132 km and remaining relatively consistent through 
-#' time. On average, sites were resampled 3 times within the 14-year observation period 
-#' (2010 - 2023), with the majority of sites being sampled twice (mode). Around 85% (521) 
-#' of sites had time series less than 5 years in length, while 15% (94 sites) had time 
-#' series greater than or equal to 5 years. The dataset contains count data of 761 
-#' unique taxa, with the total abundance of these taxa being 1 156 915 individuals. The 
-#' identification of these taxa was mostly at the species (61%) and genus (29%) levels, 
-#' with the remaining 10% of taxa being identified to the family (9%) or sub-family-levels 
-#' (1%). 
-#' 
-#' For lake sites (n = 338), the average number of sites sampled per year is 60, with the 
-#' distances between sites averaging 127 km and remianing relatively consistent through time. 
-#' On average sites were resampled twice within the 11-year observation period (2013 - 2023), 
-#' with most sites being resampled twice (mode). 86% #' (290 sites) of sites had time series 
-#' less than 3 years in length, while 13% (38 sites) had time series greater than or equal 
-#' to 3 years. The dataset contains count data of 675 unique taxa, with the total abundance 
-#' of these taxa being 320 837 individuals. The identification of these taxa was mostly at 
-#' the species (66%) and genus (27%) levels, with the remaining 8% of taxa being identified 
-#' to the family (7%) or sub-family-levels (1%). 
-#' 
+#' more consistently.
+#'
+#' For river sites (n = 615), the average number of sites sampled per year is 151, with
+#' distances between sites averaging 132 km and remaining relatively consistent through
+#' time. On average, sites were resampled 3 times within the 14-year observation period
+#' (2010 - 2023), with the majority of sites being sampled twice (mode). Around 85% (521)
+#' of sites had time series less than 5 years in length, while 15% (94 sites) had time
+#' series greater than or equal to 5 years. The dataset contains count data of 761
+#' unique taxa, with the total abundance of these taxa being 1 156 915 individuals. The
+#' identification of these taxa was mostly at the species (61%) and genus (29%) levels,
+#' with the remaining 10% of taxa being identified to the family (9%) or sub-family-levels
+#' (1%).
+#'
+#' For lake sites (n = 338), the average number of sites sampled per year is 60, with the
+#' distances between sites averaging 127 km and remianing relatively consistent through time.
+#' On average sites were resampled twice within the 11-year observation period (2013 - 2023),
+#' with most sites being resampled twice (mode). 86% #' (290 sites) of sites had time series
+#' less than 3 years in length, while 13% (38 sites) had time series greater than or equal
+#' to 3 years. The dataset contains count data of 675 unique taxa, with the total abundance
+#' of these taxa being 320 837 individuals. The identification of these taxa was mostly at
+#' the species (66%) and genus (27%) levels, with the remaining 8% of taxa being identified
+#' to the family (7%) or sub-family-levels (1%).
+#'
 #' In Baker et al. (2024), a subset of this dataset was used to determine temporal changes
-#' in macroinvertebrate communities between 2010 and 2022. This investigation is a regional 
-#' follow-up to Haase et al. (2023) - Nature, and Sinclair et al. (2024) - Nat. Ecol. Evol. 
-#' which also included parts of the larger Lithuanian dataset. 
-#' 
-#' Lithuania is in the boreal ecoregion, with mean annual precipitation and temperature 
-#' (from 1991 to 2020) being 679 mm and 7.38 °C, respectively. Situated at the edge of 
-#' the East European Plain, its low-lying post-glaciated landscape has a maximum elevation 
-#' of 297 m a.s.l., with 758 streams greater than 10 km long transecting the country. The 
-#' largest and most economically important river is the Nemunas, which originates in Belarus, 
-#' forms the catchment area for 72% of Lithuania’s 64,800 km2 territory, and drains into 
-#' the Baltic Sea. Other noteworthy catchments include the basins of the Venta, Lielupė, 
-#' and Dauguva rivers. All Lithuanian rivers are calcareous and lowland (< 200 m a.s.l.), 
-#' with their river typology being based on catchment size and slope Despite heavy 
+#' in macroinvertebrate communities between 2010 and 2022. This investigation is a regional
+#' follow-up to Haase et al. (2023) - Nature, and Sinclair et al. (2024) - Nat. Ecol. Evol.
+#' which also included parts of the larger Lithuanian dataset.
+#'
+#' Lithuania is in the boreal ecoregion, with mean annual precipitation and temperature
+#' (from 1991 to 2020) being 679 mm and 7.38 °C, respectively. Situated at the edge of
+#' the East European Plain, its low-lying post-glaciated landscape has a maximum elevation
+#' of 297 m a.s.l., with 758 streams greater than 10 km long transecting the country. The
+#' largest and most economically important river is the Nemunas, which originates in Belarus,
+#' forms the catchment area for 72% of Lithuania’s 64,800 km2 territory, and drains into
+#' the Baltic Sea. Other noteworthy catchments include the basins of the Venta, Lielupė,
+#' and Dauguva rivers. All Lithuanian rivers are calcareous and lowland (< 200 m a.s.l.),
+#' with their river typology being based on catchment size and slope Despite heavy
 #' deforestation during the soviet regime, the coverage of postsoviet forests in Lithuania
-#' comprised mostly of pine, spruce, and birch—has recovered from 31.3% in 1992 to 35.5% in 
-#' 2023. Lithuania’s built-up areas (3.73% coverage) have increased since 1971, while the 
-#' coverage of arable land (45.99%), meadows/pastures (5.55%), wetlands (5.62%), and other 
+#' comprised mostly of pine, spruce, and birch—has recovered from 31.3% in 1992 to 35.5% in
+#' 2023. Lithuania’s built-up areas (3.73% coverage) have increased since 1971, while the
+#' coverage of arable land (45.99%), meadows/pastures (5.55%), wetlands (5.62%), and other
 #' land uses (5.78%) has declined. There majority of lakes are located in the north-east
 #' part of the country.
 
-#' Most of Lithuania’s arable land is restricted to a central strip that runs north to south, 
-#' from above the city of Šiauliai to below the city of Kaunas. This arable region transects 
+#' Most of Lithuania’s arable land is restricted to a central strip that runs north to south,
+#' from above the city of Šiauliai to below the city of Kaunas. This arable region transects
 #' the country into two distinct climatic regions across an east-west gradient. The eat of the
-#' country is categorized by higher average temperatures, higher precipitation, more sunshine 
+#' country is categorized by higher average temperatures, higher precipitation, more sunshine
 #' hours and higher wind speeds, while the east is cooler, drier, and calmer. These regions can
-#' also be delimited by lowlands in the west and highlands in the east. More information is 
+#' also be delimited by lowlands in the west and highlands in the east. More information is
 #' available here: https://www.meteo.lt/en/climate/lithuanian-climate/air-temperature/
 
-#' Lithuania is geographically located along an important migratory pathway of birds migrating 
+#' Lithuania is geographically located along an important migratory pathway of birds migrating
 #' northward in the spring and southward in the fall. The worlds second oldest ornithological
-#' station, Ventas Ragas, is located in the western part of the country, on the Curonian lagoon. 
+#' station, Ventas Ragas, is located in the western part of the country, on the Curonian lagoon.
 #' Here, and at a nearby ornithological station called Ribachy located on the Curonian Spit,
-#' birds are screened for avian malarial parasites of the Haemosporidian genera Leucocytozoon, 
+#' birds are screened for avian malarial parasites of the Haemosporidian genera Leucocytozoon,
 #' Haemoproteus, and Plasmodium. These parasites are transmitted by insect vectors, namely members
-#' of the Simulidae (black flies), the Ceratopogoniidae (biting midges), the Culicidae (mosquitos), 
+#' of the Simulidae (black flies), the Ceratopogoniidae (biting midges), the Culicidae (mosquitos),
 #' during feeding on blood and have been increasing in prevalence among birds since observations
 #' began (see below).
 
 print(readRDS("Plots/Curonian_Lagoon_Malaria_Prevalence.rds"))
 
 #' Evidence suggests that Diptera (i.e., true flies) are increasing in both abundance and richness
-#' throughout Lithuania (Baker et al., 2024), potentially explaining the increase in prevalence of 
+#' throughout Lithuania (Baker et al., 2024), potentially explaining the increase in prevalence of
 #' malarial haemosporidian parasite prevalence in birds.
 
 print(readRDS("Plots/LT_slopeDistributions_TaxoGroups.rds"))
 
-#' However, the driving factors behind these increases and what factors control their presence and 
-#' abundance are still not well understood. Furthermore, initial data exploration appears to show 
+#' However, the driving factors behind these increases and what factors control their presence and
+#' abundance are still not well understood. Furthermore, initial data exploration appears to show
 #' that vector presence and abundance is highest in the eastern Lithuania, which is comparatively
-#' undersampled, both in terms of bird malaria and vector dynamics, compared to western Lithuania 
-#' near the curonian lagoon. 
+#' undersampled, both in terms of bird malaria and vector dynamics, compared to western Lithuania
+#' near the curonian lagoon.
 
-#' The aim of this study is to determine the driving forces behind vector presence and abundance, in 
+#' The aim of this study is to determine the driving forces behind vector presence and abundance, in
 #' an attempt to better understand vector and malarial dynamics, while simultaneously identifying
 #' underrepresented and under sampled regions that may yeild better more sucess in finding bird
-#' malarial parasites, thereby shedding light on the processes shaping malarial spread amongst birds 
+#' malarial parasites, thereby shedding light on the processes shaping malarial spread amongst birds
 #' and thus potentially informing human-malaria relationships.
 
 #' The species investigated in the paper are:
-#'   -Freshwater macroinvertebrates, which are categorized as: 
-#'    insects in their nymph and larval stages, snails, worms, 
-#'    crayfish, and clams that spend at least part of their 
-#'    lives in water and large enough to see without the aid 
+#'   -Freshwater macroinvertebrates, which are categorized as:
+#'    insects in their nymph and larval stages, snails, worms,
+#'    crayfish, and clams that spend at least part of their
+#'    lives in water and large enough to see without the aid
 #'    of a microscope.
 #'   -The initial data set contained counts for all the macro-
 #'    invertebrate species collected  at a site, however, only
-#'    dipteran data were retained. 
+#'    dipteran data were retained.
 
 #' Below are some bullet points describing the data collection.
-#'  1. River and lake sites form part of Lithuania's national biomonitoring 
+#'  1. River and lake sites form part of Lithuania's national biomonitoring
 #'     scheme
 
-#'  2. At each site, macroinvertebrate sampling included both quantitative 
-#'     (standard multihabitat kick-sampling) and qualitative (hand-picking 
-#'     organisms from underwater objects) components (Šidagytė-Copilas & 
+#'  2. At each site, macroinvertebrate sampling included both quantitative
+#'     (standard multihabitat kick-sampling) and qualitative (hand-picking
+#'     organisms from underwater objects) components (Šidagytė-Copilas &
 #'     Arbačiauskas, 2022).
 
 #'  3. The quantitative samples were collected using the multihabitat method.
-#'     Within a site, 10 subsamples (later to be pooled into one sample) were 
-#'     collected from all available microhabitats proportionally to their 
-#'     estimated distribution. Each subsample was collected using the kick 
-#'     method by disturbing the 40 cm length area in front of the standard 
-#'     handnet (25 × 25 cm opening, 0.5 mm mesh size), resulting in 0.1 m2 of 
+#'     Within a site, 10 subsamples (later to be pooled into one sample) were
+#'     collected from all available microhabitats proportionally to their
+#'     estimated distribution. Each subsample was collected using the kick
+#'     method by disturbing the 40 cm length area in front of the standard
+#'     handnet (25 × 25 cm opening, 0.5 mm mesh size), resulting in 0.1 m2 of
 #'     the bottom area sampled per subsample, and 1 m2 per the whole sample.
 
-#'  4. Additional qualitative samples were collected by searching for 
-#'     macroinvertebrates attached to underwater objects (roots,stones, plants, 
-#'     etc.). In cases where qualitative sampling led to the inclusion of a 
-#'     taxon not identified during the quantitative sampling, taxa were 
+#'  4. Additional qualitative samples were collected by searching for
+#'     macroinvertebrates attached to underwater objects (roots,stones, plants,
+#'     etc.). In cases where qualitative sampling led to the inclusion of a
+#'     taxon not identified during the quantitative sampling, taxa were
 #'     included with an assigned abundance of one.
 
-#'  5. Most sites are resampled in 3-year increments, with few sites having 
-#'     more regular sampling. 
+#'  5. Most sites are resampled in 3-year increments, with few sites having
+#'     more regular sampling.
 
 #' Below are some bullet points describing the initial data processing collection.
-#'  1. To ensure our biological dataset conformed to contemporary scientific 
-#'     nomenclature (Grenié et al., 2021, 2022), taxon names were individually 
-#'     checked by Lithuanian macroinvertebrate experts and verified against the 
-#'     2023 Global Biodiversity Information Facility (GBIF) taxonomic backbone. 
-#'     All non-freshwater macroinvertebrates were removed, including 
-#'     microinvertebrates (e.g. hydrachnidia, copepoda) and non-freshwater 
+#'  1. To ensure our biological dataset conformed to contemporary scientific
+#'     nomenclature (Grenié et al., 2021, 2022), taxon names were individually
+#'     checked by Lithuanian macroinvertebrate experts and verified against the
+#'     2023 Global Biodiversity Information Facility (GBIF) taxonomic backbone.
+#'     All non-freshwater macroinvertebrates were removed, including
+#'     microinvertebrates (e.g. hydrachnidia, copepoda) and non-freshwater
 #'     invertebrates (e.g. terrestrial, semi-terrestrial taxa).
 
-#'  2. For each site-year, the following taxonomic diversity indices were 
+#'  2. For each site-year, the following taxonomic diversity indices were
 #'     calculated: total diptera abundance, diptera richness, vector abundance,
-#'     and vector richness. The vegan R package (Oksanen et al., 2022) was used 
+#'     and vector richness. The vegan R package (Oksanen et al., 2022) was used
 #'     to calculate all other taxonomic indices.
 
-#'  3. For each site and year, an ecological quality ratio was calculated according 
+#'  3. For each site and year, an ecological quality ratio was calculated according
 #'     to the methods outlined in (Šidagytė-Copilas & Arbačiauskas, 2022). The EQR
-#'     is in accordance with the EU's water framework directive and describes the 
-#'     ecological quality of a site compared to a comparable reference site. The 
+#'     is in accordance with the EU's water framework directive and describes the
+#'     ecological quality of a site compared to a comparable reference site. The
 #'     EQR is bound between zero and one. From the EQR, an ecological quality class
 #'     (EQC) is assisned. This metric is the primary covariate in our analysis.
 
 #'  4. Environmental data linked to the study were accessible for a subset of sites.
-#'     The environmental dataset comprised monthly measurements of diverse variables, 
-#'     encompassing climatic parameters including water temperature (°C) and discharge 
-#'     (m3 s−1), and water quality parameters such as alkalinity (mmol l−1), dissolved 
-#'     oxygen (mg l−1), pH, electrical conductivity (μS cm−1), ammonium (mg l−1), 
-#'     nitrate (mg l− 1), nitrite (mg l−1), mineralised nitrogen (mg l−1), total 
+#'     The environmental dataset comprised monthly measurements of diverse variables,
+#'     encompassing climatic parameters including water temperature (°C) and discharge
+#'     (m3 s−1), and water quality parameters such as alkalinity (mmol l−1), dissolved
+#'     oxygen (mg l−1), pH, electrical conductivity (μS cm−1), ammonium (mg l−1),
+#'     nitrate (mg l− 1), nitrite (mg l−1), mineralised nitrogen (mg l−1), total
 #'     nitrogen (mg l−1), ortho-phosphate (mg l−1), total phosphorus (mg l−1), and
-#'     suspended solids (mg l−1). Additionally, worldclim data was used to extract 
-#'     climatic variables from each site-year combination. The following parameters 
-#'     were extracted for each site and year: precipitation (ppt), discharge (q), 
+#'     suspended solids (mg l−1). Additionally, worldclim data was used to extract
+#'     climatic variables from each site-year combination. The following parameters
+#'     were extracted for each site and year: precipitation (ppt), discharge (q),
 #'     maximum temperature (tmax), minimum temperature (tmin), and wind speed (ws).
-#'     
-#'     For each biological site-year, the specific month of the biological sampling 
-#'     was determined. Subsequently, mean annual values of the predictor variables 
+#'
+#'     For each biological site-year, the specific month of the biological sampling
+#'     was determined. Subsequently, mean annual values of the predictor variables
 #'     were computed using data from the preceding 12 months.
-#'     
-#'  5. Elevation data for each unique site-year combination was extracted using 
-#'     Google's Maps Elevation API. 
-#'     
-#'  6. Landuse data for each unique site-year combination was extracted using 
+#'
+#'  5. Elevation data for each unique site-year combination was extracted using
+#'     Google's Maps Elevation API.
+#'
+#'  6. Landuse data for each unique site-year combination was extracted using
 #'     the 2018 Corine landcover dataset. The coarsest level of naming was used for
 #'     the landcover (LABEL 1) to avoid too many collinear covaraites. We used 1000m
-#'     buffer zones around the sites to account for relatively small-scale effects 
+#'     buffer zones around the sites to account for relatively small-scale effects
 #'     of landuse on dipteran communities.
 
-#' The basic statistical unit of the analysis is the sum of abundances of vectors 
+#' The basic statistical unit of the analysis is the sum of abundances of vectors
 #' species counted within sample from a biomonitoring survey within a given year.
 
-#' Since many site-year observations had vector abundances of zero, the data are 
-#' likely zero inflated with a large range (more on this later). 
+#' Since many site-year observations had vector abundances of zero, the data are
+#' likely zero inflated with a large range (more on this later).
 
 
 #* Subsection 1.4: The variables----
@@ -285,8 +285,8 @@ source(file = "Additional functions/HighstatLibV15.R")
 
 #' Load the dipteran vector data.
 # Import the data
-df <- read.csv("Data/Bio_Env_data_15.1.2025.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE) |> 
-  clean_names() |> 
+df <- read.csv("Data/Bio_Env_data_15.1.2025.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE) |>
+  clean_names() |>
   # filter(year >= 2013 & year <= 2022) |> # Remove years less than 2013 or greater than 2022 (when looking at lakes and rivers combined)
   # filter(waterbody_type == "lake") |> # keep data from rivers only
   # filter(waterbody_type == "river") |> # keep data from lakes only
@@ -305,7 +305,7 @@ df <- read.csv("Data/Bio_Env_data_15.1.2025.csv", h = T, sep = ",", stringsAsFac
          state            = factor(state, levels = c("A", "HM", "N"),
                                           labels = c("Artificial", "Heavily_modified", "Natural"),
                                           ordered = F), # make state a factor
-         eqc              = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"), 
+         eqc              = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                         labels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                         ordered = F), # make EQC a factor
          waterbody_name   = factor(waterbody_name), # make waterbody_name a factor
@@ -318,7 +318,7 @@ df <- read.csv("Data/Bio_Env_data_15.1.2025.csv", h = T, sep = ",", stringsAsFac
          artificial       = artificial_surfaces,
          natural          = forest_and_semi_natural_areas,
          water            = water_bodies,
-         wetlands         = wetlands) |> 
+         wetlands         = wetlands) |>
   select(-c(observation_period, sampling_events)) |> # removes unnecessary columns
   arrange(desc(waterbody_type), site_id, year) |>  # order the data.frame
   as.data.frame() # Convert tibble to dataframe because some older code does not recognize tibble
@@ -377,7 +377,7 @@ MyControlPredictor  <- list(compute = TRUE, #' Calculate fitted values
 
 #' Define the penalised complexity prior for the RW2 smoother.
 U <- 1
-MyPCPrior <- list(theta = list(prior = "pc.prec", 
+MyPCPrior <- list(theta = list(prior = "pc.prec",
                                param = c(U, 0.01)))
 
 
@@ -395,11 +395,11 @@ assign("inla.models", m, inla.get.inlaEnv())
 #' Calculate how many observations we have per year?
 table(df$year)
 
-# Likely need to drop 2023 because it has far fewer sites than the other years. 
-# Also, 2010, 2011, and 2012 are only available for rivers, so might as well drop 
+# Likely need to drop 2023 because it has far fewer sites than the other years.
+# Also, 2010, 2011, and 2012 are only available for rivers, so might as well drop
 # those too.
 
-df <- df |> 
+df <- df |>
   filter(year >= 2013 & year <= 2022) # Remove years less than 2013 or greater than 2022
 
 # How many observations do we have per location per year?
@@ -421,26 +421,26 @@ df <- df |>
 # Lets keep these for now
 
 # Keep sites with less than 2 sampling events throughout the observation period
-df <- df |> 
-  filter(sampling_events >= 1) |> 
+df <- df |>
+  filter(sampling_events >= 1) |>
   arrange(desc(waterbody_type), site_id, year)
 
 #* Subsection 4.2: Missing values----
 
 # Missing values?
-colSums(is.na(df))  
-100 * colSums(is.na(df)) / nrow(df)  
+colSums(is.na(df))
+100 * colSums(is.na(df)) / nrow(df)
 
 # There are manu NA values, including some ~1% in our focal covariate: EQR. Let's remove
 # the rows with missing EQR values and then remove columns containing many NAs which are
 # unnecessary for this analysis.
 
 # Remove rows where EQR is NA
-df <- df |> 
+df <- df |>
   filter(!is.na(eqr))
 
 # Remove columns containing NA values
-df <- df |> 
+df <- df |>
   select(where(~ all(!is.na(.))))
 
 #* Subsection 4.3: Check values after cleaning----
@@ -451,9 +451,9 @@ NROW(unique(df$site_id))
 # We still have 699 sites
 
 # How many lake sites vs rivers sites do we have?
-df |> 
-  group_by(waterbody_type) |> 
-  summarise(unique_sites = n_distinct(site_id)) |> 
+df |>
+  group_by(waterbody_type) |>
+  summarise(unique_sites = n_distinct(site_id)) |>
   arrange(desc(unique_sites))
 
 # We have more than double the amount of lake sites compared to river sites
@@ -480,7 +480,7 @@ My_theme <- theme(panel.background = element_blank(),
 
 #' Make a Cleveland dotplot of the response variable 'spider richness' and the
 #' continuous covariates.
-MyVar <- c("Counts", "eqr", "ppt", "tmax", "tmin", "q", "ws", "elevation", 
+MyVar <- c("Counts", "eqr", "ppt", "tmax", "tmin", "q", "ws", "elevation",
            "agriculture", "artificial", "natural",
            "year")
 Mydotplot(df[,MyVar])
@@ -489,28 +489,28 @@ Mydotplot(df[,MyVar])
 
 #* Subsection 5.2: Collinearity----
 
-df |> 
-  ggpairs(columns = MyVar, 
-          aes(alpha = 0.8), lower = list(continuous = "smooth_loess", 
+df |>
+  ggpairs(columns = MyVar,
+          aes(alpha = 0.8), lower = list(continuous = "smooth_loess",
           combo = wrap("facethist", binwidth = 5))) + My_theme
 
-df |> 
-  select(all_of(MyVar)) |> 
+df |>
+  select(all_of(MyVar)) |>
   corvif()
 
 # Perhaps tmax and q can cause some trouble. Let's remove them and see
 
-MyVar_red <- c("eqr", "ppt", "tmin", "ws", "elevation", 
+MyVar_red <- c("eqr", "ppt", "tmin", "ws", "elevation",
                "agriculture", "artificial", "natural",
                "year")
 
-df |> 
-  ggpairs(columns = MyVar_red, 
-          aes(alpha = 0.8), lower = list(continuous = "smooth_loess", 
+df |>
+  ggpairs(columns = MyVar_red,
+          aes(alpha = 0.8), lower = list(continuous = "smooth_loess",
           combo = wrap("facethist", binwidth = 5))) + My_theme
 
-df |> 
-  select(all_of(MyVar_red)) |> 
+df |>
+  select(all_of(MyVar_red)) |>
   corvif()
 
 # seems okay now, but maybe we can drop some terms later?
@@ -519,7 +519,7 @@ df |>
 #* Subsection 5.3: Relationships----
 
 # Then plot
-p1 <- df |> 
+p1 <- df |>
   ggplot(aes(y = Counts, x = eqr)) +
   geom_smooth(method = "gam") +
   labs(y = "Vector abundance",
@@ -535,7 +535,7 @@ p1 + facet_grid(~waterbody_type)
 # a similar relationship between lakes and rivers
 
 
-p2 <- df |> 
+p2 <- df |>
   ggplot(aes(y = Counts, x = ppt)) +
   geom_smooth(method = "gam") +
   labs(y = "Vector counts",
@@ -714,7 +714,7 @@ p13
 # the range for rivers is much larger
 
 #' What about plotting the time series for each sampling site?
-p13 <- df |> 
+p13 <- df |>
   ggplot(aes(x = year, y = Counts,
            group = site_id)) +
   scale_x_continuous(breaks = 2013:2022, limits = c(2013, 2022)) +
@@ -727,7 +727,7 @@ table(df$site_id, df$year)
 #* Subsection 5.4: Normality and zero inflation----
 
 # Frequency plot
-p1 <- df |> 
+p1 <- df |>
   ggplot(aes(Counts)) +
   geom_freqpoly(bins = 15) +
   labs(x = "Vector counts",
@@ -737,7 +737,7 @@ p1
 # High number of zeros and count positively skewed
 
 # How many zeros do we have?
-df |> 
+df |>
   summarise(percentage_zero = sum(Counts == 0) / n() * 100)
 # 64% zeros - too many!!!
 
@@ -745,26 +745,25 @@ df |>
 #* Subsection 5.5: Dependency----
 
 # Spatial position of the sites
-xyplot(latitude ~ longitude, 
+xyplot(latitude ~ longitude,
        aspect = "fill",
        data = df)
 #' Spatial data! We have 699 spatial locations, corresponding to the site_id.
 
 range(df$longitude, df$latitude)
 MyCex <- 3 * sqrt(df$vec_abund + 1) / 10
-register_google(key = "AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc")
-glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57), 
-                  maptype = "terrain")    
+glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57),
+                  maptype = "terrain")
 p <- ggmap(glgmap)
-p <- p + geom_point(aes(x = longitude, 
-                        y = latitude, 
+p <- p + geom_point(aes(x = longitude,
+                        y = latitude,
                         color = waterbody_type,
-                        shape = waterbody_type), 
-                    size = MyCex, 
+                        shape = waterbody_type),
+                    size = MyCex,
                     data = df)
 p <- p + scale_color_manual(values = c("black", "red"))
 p <- p + scale_shape_manual(values = c(19, 17))
-p <- p + xlab("Longitude") + ylab("Latitude")  
+p <- p + xlab("Longitude") + ylab("Latitude")
 p <- p + theme(text = element_text(size=15))
 p
 
@@ -901,15 +900,15 @@ ggplot() +
 
 #* Subsection 5.6: Conclusions----
 
-#' 1. We have count data with plenty of zeros. The range of the data is large. 
+#' 1. We have count data with plenty of zeros. The range of the data is large.
 #'    I anticipate a negative binomial distribution or worst case a ZIP or ZINB
 #'    (unless I can explain them with a time component or spatial component).
 #' 2. We have spatial-temporal data.
-#' 3. There appears to be a positive relationship between EQR, precipiation, minimum 
+#' 3. There appears to be a positive relationship between EQR, precipiation, minimum
 #'    temperature and elevation, and there seems to be some variation with waterbody
 #'    type. Interaction term?
 #' 4. Maybe we need to remove data from 2018 as fewer sites were sampled during that year. <---- not worried about this
-#' 5. Seasonality should be captured by waterbody type: Rivers always sampled in autumn, 
+#' 5. Seasonality should be captured by waterbody type: Rivers always sampled in autumn,
 #'    lakes always sampled in spring.
 
 
@@ -936,7 +935,7 @@ ggplot() +
 
 #* Subsection 6.1: Standardize covariates----
 
-df <- df |> 
+df <- df |>
   mutate(
     eqr.std         = MyStd(eqr),
     ppt.std         = MyStd(ppt),
@@ -961,7 +960,7 @@ df <- df |>
 
 I1 <- inla(Counts ~ 1 + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
                         agriculture.std + artificial.std + natural.std +
-                        f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) + 
+                        f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
                         waterbody_type,
            control.compute = MyControlCompute,
            control.predictor = MyControlPredictor,
@@ -986,18 +985,18 @@ head(MyData)
 
 
 #' Rename some of the columns.
-MyData <- dplyr::rename(MyData, 
+MyData <- dplyr::rename(MyData,
                         Covariates = `ID`,
-                        mu    = mean, 
-                        SeLo  = `0.025quant`, 
+                        mu    = mean,
+                        SeLo  = `0.025quant`,
                         SeUp  = `0.975quant`)
 head(MyData)
 
 
-#' Coding problem: 
-#'    When there are knots (covariates with the same value), only 1 
+#' Coding problem:
+#'    When there are knots (covariates with the same value), only 1
 #'    value is estimated at that knot.
-#' To see this: 
+#' To see this:
 NX <- c(nrow(I1$summary.random$year))
 NX #' Number of values per RW2 term.
 
@@ -1014,22 +1013,22 @@ head(MyData)
 
 
 #' Now we can plot the smoothers.
-p1 <- ggplot() + 
-  geom_line(data = MyData, 
-            aes(x = Covariates, 
-                y = mu), 
+p1 <- ggplot() +
+  geom_line(data = MyData,
+            aes(x = Covariates,
+                y = mu),
             colour = "black") +
-  geom_ribbon(data = MyData, 
-              aes(x = Covariates, 
-                  ymax = SeUp, 
+  geom_ribbon(data = MyData,
+              aes(x = Covariates,
+                  ymax = SeUp,
                   ymin = SeLo),
               fill = "blue",
-              alpha = 0.2) + 
+              alpha = 0.2) +
   geom_rug(data = MyData,
            aes(x = Covariates)) +
   geom_hline(yintercept = 0, lty = 2) +
-  xlab("Covariates") + ylab("RW2 Smoother") + 
-  theme(text = element_text(size = 15)) 
+  xlab("Covariates") + ylab("RW2 Smoother") +
+  theme(text = element_text(size = 15))
 p1
 #' Conclusions:
 #' ??????
@@ -1582,7 +1581,7 @@ w2.index <- inla.spde.make.index(name = 'w',
 
 #' Make the X matrix using model.matrix()
 X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
-                    agriculture.std + artificial.std + natural.std + 
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type,
                   data = df)
 X <- as.data.frame(X) #' Avoids an error message in INLA
@@ -1633,20 +1632,20 @@ colnames(X)
 
 
 f1.lm <- Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
-                       agriculture.std + artificial.std + natural.std + 
-                       f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) + 
+                       agriculture.std + artificial.std + natural.std +
+                       f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
                        waterbody_type.L
 
 f2.mesh1 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
-                           agriculture.std + artificial.std + natural.std + 
-                           f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) + 
+                           agriculture.std + artificial.std + natural.std +
+                           f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
                            waterbody_type.L +
                            f(w, model = spde1)
 
 #' This is the model with spatial dependency, based on mesh 2.
 f2.mesh2 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
-                    agriculture.std + artificial.std + natural.std + 
-                       f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) + 
+                    agriculture.std + artificial.std + natural.std +
+                       f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
                        waterbody_type.L +
                        f(w, model = spde2)
 
@@ -1715,7 +1714,7 @@ Range   <- SpatialParams[3]  #' expressed in metres
 Sigma.u   #' u_i ~ N(0, 7.289291^2 * Spatial correlation) - we initial sigma would not be larger than 2 (spde has big and negative and positive values)
 Range     #' Distance at which the correlation diminishes.
           #' That is a small range! Much smaller than we specified
-          #' with the PC prior. <-  75 km 
+          #' with the PC prior. <-  75 km
 
 # i.e., the wrong distribution
 
@@ -1805,7 +1804,7 @@ MyData$w.pm <- as.vector(SRF.Proj)
 #' For all sites not on Lithuania, set the w.pm to NA.
 #' To do this, we use the st_contains function from the
 #' sf package. It will tell us which points are on
-#' Lithuania (InLithuania = 1) or outside Lithuania 
+#' Lithuania (InLithuania = 1) or outside Lithuania
 #' (OutLithuania = NA).
 
 #' Create an sf object from the coordinates
@@ -1966,7 +1965,7 @@ NROW(RowsW)
 #' Calculate 1000 times the fitted values via mu = exp(X * beta).
 #' Get the design matrix X.
 X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
-                    agriculture.std + artificial.std + natural.std + 
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type,
                   data = df)
 X <- as.matrix(X)
@@ -2037,7 +2036,7 @@ sum(E2.pr^2) / (N - 11) # <--- in principle, this should be 13 because the 11 ig
 #' Let us recap what is happening. The model without spatial correlation
 #' is heavily overdispersed. The model with spatial correlation is
 #' not overdispersed. That means that the spatial term itself
-#' is working relatively well. We can control it by adjusting the 
+#' is working relatively well. We can control it by adjusting the
 #' priors on the range parameter:
 
 #'   P(Range < 100 km) = 0.00001 # <---- forces INLA to take the range for at least 5 km!!!! Could help solve the underdisperson problem.
@@ -2280,7 +2279,7 @@ MyCompareBetasofModels(AllModels = list(Out1, Out2, Out3),
 #' random effect site.
 
 
-#' Initial models using the Poisson distribution were generally overdispersed, 
+#' Initial models using the Poisson distribution were generally overdispersed,
 #' and could not cope with the zero inflation. I therefore apply a NB GLM.
 #' Such a model is specified by:
 
@@ -2311,8 +2310,8 @@ MyControlPredictor  <- list(compute = TRUE, #' Calculate fitted values
 
 #' Execute the reference model.
 #' model 1: mu_ij = exp(Intercept + covariates)
-I1 <- inla(Counts ~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                    agriculture.std + artificial.std + natural.std + 
+I1 <- inla(Counts ~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type,
            data = df,
            control.compute = MyControlCompute,
@@ -2399,8 +2398,8 @@ RowsBeta
 
 #' Calculate 1000 times the fitted values via: mu = exp(X * beta).
 #' Get the design matrix X.
-X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                    agriculture.std + artificial.std + natural.std + 
+X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type, data = df)
 X <- as.matrix(X)
 
@@ -2726,8 +2725,8 @@ w2b.index <- inla.spde.make.index(name = 'w',
 #* Subsection 18.6: Make a stack----
 
 #' Make the X matrix using model.matrix()
-X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                    agriculture.std + artificial.std + natural.std + 
+X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type, data = df)
 X <- as.data.frame(X) #' Avoids an error message in INLA
 colnames(X)
@@ -2782,22 +2781,22 @@ colnames(X)
 
 
 #' This is the model without spatial dependency (again).
-f1 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                     agriculture.std + artificial.std + natural.std + 
+f1 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                     agriculture.std + artificial.std + natural.std +
                      year.std + waterbody_type.L
 
 
 #' This is the model with spatial dependency, based on mesh 2a.
-f2a <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                      agriculture.std + artificial.std + natural.std + 
-                      year.std + waterbody_type.L + 
+f2a <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                      agriculture.std + artificial.std + natural.std +
+                      year.std + waterbody_type.L +
                       f(w, model = spde2a)
 
 
 #' This is the model with spatial dependency, based on mesh2b.
-f2b <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                      agriculture.std + artificial.std + natural.std + 
-                      year.std + waterbody_type.L + 
+f2b <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                      agriculture.std + artificial.std + natural.std +
+                      year.std + waterbody_type.L +
                       f(w, model = spde2b)
 
 
@@ -3047,8 +3046,8 @@ mesh2a$n
 
 #' Calculate 1000 times the fitted values via: mu = exp(X * beta + A3 * w).
 #' Get the design matrix X.
-X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                    agriculture.std + artificial.std + natural.std + 
+X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type, data = df)
 X <- as.matrix(X)
 
@@ -3341,8 +3340,8 @@ w3Repl <- inla.spde.make.index('w',
 #* Subsection 21.5: Stack for the replicate spatial-temporal GLM----
 
 #' Make the X matrix using model.matrix()
-X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                    agriculture.std + artificial.std + natural.std + 
+X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type, data = df)
 X <- as.data.frame(X) #' Avoids an error message in INLA
 colnames(X)
@@ -3386,9 +3385,9 @@ colnames(X)
 
 
 #' This is the model with spatial dependency, based on mesh 2a.
-f3 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                     agriculture.std + artificial.std + natural.std + 
-                     year.std + waterbody_type.L + 
+f3 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                     agriculture.std + artificial.std + natural.std +
+                     year.std + waterbody_type.L +
                  f(w, model = spde3Repl, replicate = w.repl) # <---  w.repl is correct, should not be w3Repl
 
 
@@ -3540,7 +3539,7 @@ ggplot() +
 #' #' If you want to see the changes more clearly, then
 #' #' use the animation package. The code below was partly
 #' #' written by Dr. Christoph Kopp
-#' 
+#'
 #' #' Ignore the warning on nmax.
 #' saveHTML({
 #'   ani.options(interval = 1, nmax = 50, use.dev = FALSE)
@@ -3550,16 +3549,16 @@ ggplot() +
 #'       cex.axis = 0.8,
 #'       cex.lab = 0.8,
 #'       cex.main = 1)
-#' 
+#'
 #'   #' Grab the names of the years.
 #'   AllYear <- levels(MyData.All$fYear)
-#' 
+#'
 #'   #' Run a loop in which for each year k, we plot the
 #'   #' w.pm values of that year.
 #'   for(k in AllYear){
 #'     #' Grab the SRF for year k.
 #'     MyDataYeari <- subset(MyData.All, fYear == k)
-#' 
+#'
 #'     #' Plot it.
 #'     pi <- ggplot() +
 #'            geom_sf(data = st_sf(SeaPolygon_UTM),
@@ -3592,7 +3591,7 @@ ggplot() +
 #' }, img.name = "inla-plot",
 #'    title = "INLA-simulation",
 #' description = c("Spatial-temporal replicate field"))
-#' 
+#'
 #' #' A browser should now pop up showing the 18 SRFs in sequence.
 #' #' You can control the speed.
 
@@ -3758,9 +3757,9 @@ Stack4.ar1 <- inla.stack(
 
 #' This is the model with spatial-temporal auto-regression
 #' correlation, based on mesh2a.
-f4 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                     agriculture.std + artificial.std + natural.std + 
-                     year.std + waterbody_type.L + 
+f4 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                     agriculture.std + artificial.std + natural.std +
+                     year.std + waterbody_type.L +
                      f(w,
                        model = spde4ar1,
                        group = w.group,
@@ -3785,8 +3784,8 @@ I4 <- inla(f4,
            data = inla.stack.data(Stack4.ar1),
            control.compute = MyControlCompute,
            control.predictor = list(A = inla.stack.A(Stack4.ar1)),
-  
-  
+
+
            #' Faster calculation:
            control.inla = list(strategy = 'gaussian',
                                int.strategy = 'eb')) # <--- remove these lines for more precision
@@ -3982,8 +3981,8 @@ summary(I4)
 #' #' These are the years and the knots.
 #' AllYears  <- levels(MyData.All$fYear)
 #' NamesKnots <- Knots
-#' 
-#' 
+#'
+#'
 #' #' Ignore the warning on nmax.
 #' saveHTML({
 #'   ani.options(interval = 1, nmax = 50, use.dev = FALSE)
@@ -3993,13 +3992,13 @@ summary(I4)
 #'       cex.axis = 0.8,
 #'       cex.lab = 0.8,
 #'       cex.main = 1)
-#' 
-#' 
+#'
+#'
 #'   #' Start a loop to plot the SRF for each year.
 #'   for(k in 1:NGroups){
 #'     #' Grab the results from year (or knot) i.
 #'     MyDataKnoti <- subset(MyData.All, fKnots == NamesKnots[k])
-#' 
+#'
 #'     #' Plot results for year i
 #'     pi <- ggplot() +
 #'       geom_sf(data = st_sf(SeaPolygon_UTM),
@@ -4085,8 +4084,8 @@ RowsW
 
 #' Calculate 1000 times the fitted values via: mu = exp(X * beta + A * w).
 #' Get the design matrix X.
-X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std + 
-                    agriculture.std + artificial.std + natural.std + 
+X <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                    agriculture.std + artificial.std + natural.std +
                     year.std + waterbody_type, data = df)
 X <- as.matrix(X)
 
@@ -4395,7 +4394,7 @@ ggplot(BetaFinal_df, aes(x = Mean, y = Covariate)) +
 
 # intercept is the baseline where everything is at the average.
 # Lakes have higher dipteran counts, but this is not statistically important.
-# If you use a spatial-temporal model, you may very well find that the confidence intervals will 
+# If you use a spatial-temporal model, you may very well find that the confidence intervals will
 # get a bit smaller, making the differences between lakes and rivers statistically important.
 
 #' Here is the posterior mean of the theta:
@@ -4409,7 +4408,7 @@ BetaFinal_df
 #' E[Counts_i] = mu_i
 #' var[Counts_i] = mu_i + mu_i^2 / 1.293
 
-#' mu_i = exp(1.42 + 
+#' mu_i = exp(1.42 +
 #'            0.78 * eqr.std +
 #'            0.44 * ppt.std +
 #'            0.27 * tmin.std +

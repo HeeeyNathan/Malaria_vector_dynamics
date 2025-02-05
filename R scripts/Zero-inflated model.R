@@ -1,6 +1,6 @@
 #==================== RScript for analysis of macroinvertebrate biomonitoring data from Lithuania
-#==================== Start =================== 
-#==================== Load packages =================== 
+#==================== Start ===================
+#==================== Load packages ===================
 
 # Load packages
 library(arm)
@@ -35,11 +35,11 @@ library(rnaturalearthdata)
 
 source("Additional functions/HighstatLibV11.R")
 
-#==================== Import data =================== 
+#==================== Import data ===================
 
 # Import the data
-df <- as_tibble(read.csv("Data/Bio_Env_data_03.12.2024.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE)) |> 
-  clean_names() |> 
+df <- as_tibble(read.csv("Data/Bio_Env_data_03.12.2024.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE)) |>
+  clean_names() |>
   filter(year >= 2013 & year <= 2022) |> # Remove years less than 2013 or greater than 2022 (when looking at lakes and rivers combined)
   # filter(waterbody_type == "lake") |> # keep data from rivers only
   # filter(waterbody_type == "lake") |> # keep data from lakes only
@@ -59,7 +59,7 @@ df <- as_tibble(read.csv("Data/Bio_Env_data_03.12.2024.csv", h = T, sep = ",", s
          state            = factor(state, levels = c("A", "HM", "N"),
                                           labels = c("A", "HM", "N"),
                                           ordered = F), # make state a factor
-         eqc              = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"), 
+         eqc              = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                         labels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                         ordered = F), # make EQC a factor
          waterbody_name   = factor(waterbody_name), # make waterbody_name a factor
@@ -77,15 +77,15 @@ df <- as.data.frame(df)
 
 glimpse(df)
 
-# We have 2089 observations, each a unique site-year sampling survey of 
-# macroinvertebrates in Lithuanian freshwaters (lakes and riverS). 
+# We have 2089 observations, each a unique site-year sampling survey of
+# macroinvertebrates in Lithuanian freshwaters (lakes and riverS).
 # 'Ecological quality' is continuous (ratio) variable of ecological quality (0 to 1)
 
 # Any missing values
 colSums(is.na(df[, c("vec_abund", "eqr", "ppt", "q", "tmax", "tmin", "doy", "year")]))
 # no missing values
 
-#==================== Coding issues =================== 
+#==================== Coding issues ===================
 
 # Data coding issues
 LongLatToUTM <- function(x,y,zone){
@@ -104,13 +104,10 @@ df$Xkm <- df$Xutm / 1000 # covert metres to KM
 df$Ykm <- df$Yutm / 1000 # covert metres to KM
 
 
-#==================== Get elevation data =================== 
-# Your API key (replace with your actual key)
-set_key("AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc")
-
+#==================== Get elevation data ===================
 # create dataframe with unique sites and coordinates
-xy <- df |> 
-  dplyr::select(site_id, latitude, longitude) |> 
+xy <- df |>
+  dplyr::select(site_id, latitude, longitude) |>
   distinct(site_id, .keep_all = TRUE) # Keeps the first occurrence of each site_id
 
 # Split the dataset into batches (e.g., 50 coordinates per batch)
@@ -140,7 +137,7 @@ elevation_data <- bind_rows(
 xy$elevation <- elevation_data$elevation
 
 # rename columns for ease
-xy <- xy |> 
+xy <- xy |>
   rename(
     x = longitude,
     y = latitude,
@@ -181,10 +178,10 @@ interp_sf <- st_as_sf(interp_df, coords = c("x", "y"), crs = st_crs(lithuania))
 interp_clipped <- st_intersection(st_as_sf(interp_df, coords = c("x", "y"), crs = st_crs(lithuania)), lithuania)
 
 # Extract coordinates and elevation for raster plotting
-interp_clipped_df <- interp_clipped |> 
-  st_as_sf() |> 
-  st_coordinates() |> 
-  as.data.frame() |> 
+interp_clipped_df <- interp_clipped |>
+  st_as_sf() |>
+  st_coordinates() |>
+  as.data.frame() |>
   cbind(elevation = interp_clipped$elevation)
 
 ggplot() +
@@ -201,10 +198,10 @@ ggplot() +
   theme_minimal()
 
 
-#==================== House keeping =================== 
+#==================== House keeping ===================
 
 # How many observations do we have per year?
-table(df$fyear) 
+table(df$fyear)
 # slightly less observations in 2017, 2018, 2019
 
 # How many observations do we have per location x year?
@@ -214,38 +211,37 @@ print(obvs <- cbind(obvs, total = rowSums(obvs)))
 # how many sites do we have in total?
 NROW(unique(df$site_id))
 
-#==================== Spatial distribution of sites =================== 
+#==================== Spatial distribution of sites ===================
 
 # Spatial position of the sites
-xyplot(latitude ~ longitude, 
+xyplot(latitude ~ longitude,
        aspect = "fill",
        data = df)
 
 range(df$longitude, df$latitude)
 MyCex <- 2 * sqrt(df$vec_abund + 1) / 10
-register_google(key = "AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc")
-glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57), 
-                  maptype = "terrain")    
+glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57),
+                  maptype = "terrain")
 p <- ggmap(glgmap)
-p <- p + geom_point(aes(longitude, 
-                        latitude), 
-                    pch = 19, 
-                    size = MyCex, 
+p <- p + geom_point(aes(longitude,
+                        latitude),
+                    pch = 19,
+                    size = MyCex,
                     col = "red",
-                    data = df) 
-p <- p + xlab("Longitude") + ylab("Latitude")  
+                    data = df)
+p <- p + xlab("Longitude") + ylab("Latitude")
 p <- p + theme(text = element_text(size=15))
 p
 
 # And by year
 p <- ggmap(glgmap)
-p <- p + geom_point(aes(longitude, 
-                        latitude), 
-                    pch = 19, 
-                    size = MyCex, 
+p <- p + geom_point(aes(longitude,
+                        latitude),
+                    pch = 19,
+                    size = MyCex,
                     col = "red",
-                    data = df) 
-p <- p + xlab("Longitude") + ylab("Latitude")  
+                    data = df)
+p <- p + xlab("Longitude") + ylab("Latitude")
 p <- p + theme(text = element_text(size=15))
 p <- p + facet_wrap( ~ fyear)
 p # Some 2018 misery?
@@ -253,7 +249,7 @@ p # Some 2018 misery?
 # ggsave("Plots/Vector_abundance.png", plot = p, width = 8, height = 8, units = "in", dpi = 900, device = "png", bg = NA)
 
 
-#==================== Game plan =================== 
+#==================== Game plan ===================
 
 # The 7 steps to fitting a GLM are:
 
@@ -265,16 +261,16 @@ p # Some 2018 misery?
 # 6. Interpret and present model output
 # 7. Visualise the results
 
-#==================== State the question =================== 
+#==================== State the question ===================
 
 # The aim of this study is to determine whether vector abundance
 # is positively correlated with lower ecological quality / water quality:
 
-#==================== Perform exploration =================== 
+#==================== Perform exploration ===================
 
 # Outliers
-df |> 
-  select(vec_abund, eqr, ppt, q, tmax, tmin, doy, year) |> 
+df |>
+  select(vec_abund, eqr, ppt, q, tmax, tmin, doy, year) |>
   Mydotplot()
 
 # Check individual plots
@@ -289,8 +285,8 @@ My_theme <- theme(panel.background = element_blank(),
                   legend.position = "none")
 
 # Then plot
-df |> 
-  filter(vec_abund <= 300) |> 
+df |>
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = eqr)) +
   labs(y = "Vector abundance",
        x = "Ecological quality") +
@@ -300,7 +296,7 @@ df |>
   My_theme
 
 df |>
-  filter(vec_abund <= 300) |> 
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = ppt)) +
   labs(y = "Vector abundance",
        x = "Precipitation") +
@@ -310,7 +306,7 @@ df |>
   My_theme
 
 df |>
-  filter(vec_abund <= 300) |> 
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = q)) +
   labs(y = "Vector abundance",
        x = "Discharge") +
@@ -320,7 +316,7 @@ df |>
   My_theme
 
 df |>
-  filter(vec_abund <= 300) |> 
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = tmax)) +
   labs(y = "Vector abundance",
        x = "Maximum temperature") +
@@ -330,7 +326,7 @@ df |>
   My_theme
 
 df |>
-  filter(vec_abund <= 300) |> 
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = tmin)) +
   labs(y = "Vector abundance",
        x = "Minimum temperature") +
@@ -340,7 +336,7 @@ df |>
   My_theme
 
 df |>
-  filter(vec_abund <= 300) |> 
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = ws)) +
   labs(y = "Vector abundance",
        x = "Wind speed") +
@@ -350,7 +346,7 @@ df |>
   My_theme
 
 df |>
-  filter(vec_abund <= 300) |> 
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = year)) +
   labs(y = "Vector abundance",
        x = "Time") +
@@ -361,7 +357,7 @@ df |>
   My_theme
 
 df |>
-  filter(vec_abund <= 300) |> 
+  filter(vec_abund <= 300) |>
   ggplot(aes(y = vec_abund, x = doy)) +
   labs(y = "Vector abundance",
        x = "Day of year") +
@@ -373,8 +369,8 @@ df |>
 
 # NORMALITY AND HOMOGENEITY OF DEPENDENT VARIABLE
 # Frequency polygon plot
-df |> 
-  filter(vec_abund <= 300) |> 
+df |>
+  filter(vec_abund <= 300) |>
   ggplot(aes(vec_abund)) +
   geom_freqpoly(bins = 15) +
   labs(x = "Vector abundance",
@@ -383,8 +379,8 @@ df |>
 # High number of zeros and count positively skewed
 # ZEROS IN THE RESPONSE VARIABLE
 
-df |> 
-  filter(vec_abund <= 300) |> 
+df |>
+  filter(vec_abund <= 300) |>
   summarise(percentage_zero = sum(vec_abund == 0) / n() * 100)
 # 64% zeros - too many?
 # Need to fit a model then simulate from it to be sure
@@ -392,101 +388,101 @@ df |>
 
 # COLLINEARITY
 
-df |> 
-  filter(vec_abund <= 300) |> 
-  ggpairs(columns = c("eqr", "ppt", "q", "tmax", "tmin", "ws", "doy", "year"), 
-          aes(alpha = 0.8), lower = list(continuous = "smooth_loess", 
+df |>
+  filter(vec_abund <= 300) |>
+  ggpairs(columns = c("eqr", "ppt", "q", "tmax", "tmin", "ws", "doy", "year"),
+          aes(alpha = 0.8), lower = list(continuous = "smooth_loess",
           combo = wrap("facethist", binwidth = 5))) + My_theme
 
-df |> 
-  filter(vec_abund <= 300) |> 
-  select(eqr, ppt, q, tmax, tmin, ws, year, doy) |> 
+df |>
+  filter(vec_abund <= 300) |>
+  select(eqr, ppt, q, tmax, tmin, ws, year, doy) |>
   corvif()
 
 # Perhaps tmax and q can cause some trouble
 
-df |> 
-  filter(vec_abund <= 300) |> 
-  select(eqr, ppt, tmin, ws, year, doy) |> 
+df |>
+  filter(vec_abund <= 300) |>
+  select(eqr, ppt, tmin, ws, year, doy) |>
   corvif()
 
 # RELATIONSHIPS
 
 # Plot figure
 grid.arrange(
-df |> 
-  filter(vec_abund <= 300) |> 
+df |>
+  filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = eqr, y = vec_abund_pa), alpha = 0.5) +
   geom_smooth(aes(x = eqr, y = vec_abund_pa), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = eqr, y = vec_abund_pa), method = 'gam', se = T, col = "blue")+
   labs(x = "Ecological quality", y = "Vector presence/absence") +
-  My_theme, 
-  
-df |> 
-  filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = eqr, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = eqr, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = eqr, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Ecological quality", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = ppt, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = ppt, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = ppt, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Precipitation", y = "Vector abundance") +
-  My_theme,  
+  My_theme,
 
-df |> 
-  filter(vec_abund <= 300) |> 
+df |>
+  filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = tmin, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = tmin, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = tmin, y = vec_abund), method = 'gam', se = T, col = "blue") +
   labs(x = "Minimum temperature", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = ws, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = ws, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = ws, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Wind speed", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = year, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = year, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = year, y = vec_abund), method = 'gam', se = T, col = "blue")+
   scale_x_continuous(breaks = 2013:2022, limits = c(2013, 2022)) +
   labs(x = "Time", y = "Vector abundance") +
-  My_theme, 
-  
-df |> 
-  filter(vec_abund <= 300) |> 
+  My_theme,
+
+df |>
+  filter(vec_abund <= 300) |>
   ggplot(aes(x = fyear, y = vec_abund, fill = fyear)) +
   geom_point(alpha = 0.5) +
-  geom_boxplot(alpha = 0.5) + 
+  geom_boxplot(alpha = 0.5) +
   labs(x = "Time", y = "Vector abundance") +
   scale_x_discrete(breaks = 2013:2022, limits = as.character(2013:2022)) +
-  My_theme, 
+  My_theme,
 
-df |> 
-  filter(vec_abund <= 300) |> 
+df |>
+  filter(vec_abund <= 300) |>
   ggplot() +
   geom_point(aes(x = doy, y = vec_abund), alpha = 0.5) +
   geom_smooth(aes(x = doy, y = vec_abund), method = 'lm', se = T, col = "red")+
   geom_smooth(aes(x = doy, y = vec_abund), method = 'gam', se = T, col = "blue")+
   labs(x = "Day of Year", y = "Vector abundance") +
-  My_theme, 
-  
+  My_theme,
+
 nrow = 4)
 
 # Potentially a weakly positive effect of ecological quality on vector abundance, but also a lot of zeros
@@ -495,9 +491,9 @@ nrow = 4)
 # What is the source of these zeros?
 # Real zeros or should some be positive counts?
 
-#==================== Standardise data =================== 
+#==================== Standardise data ===================
 
-df <- df |> 
+df <- df |>
   mutate(
     eqr.std    = MyStd(eqr),
     ppt.std    = MyStd(ppt),
@@ -509,7 +505,7 @@ df <- df |>
     doy.std    = MyStd(doy)
 )
 
-#==================== Create formula =================== 
+#==================== Create formula ===================
 
 # Define the dependent variable and independent variables
 dependent_var <- "vec_abund"
@@ -524,18 +520,18 @@ formula_str_nospace <- paste(dependent_var, "~", paste(independent_vars, collaps
 formula_str <- as.formula(formula_str)
 formula_str_nospace <- as.formula(formula_str_nospace)
 
-#==================== Select & fit statistical model =================== 
+#==================== Select & fit statistical model ===================
 #========== Poisson GLM ==========
 
 # Vector abundance is a count, so a Poisson distribution is an appropriate starting point
 
 # The model will be fitted using the glmmTMB package
 Pois1 <- glmmTMB(formula = formula_str,
-  family = poisson(link = "log"), 
+  family = poisson(link = "log"),
   data = df)
 
 Pois1.1 <- glmmTMB(formula = formula_str_nospace,
-  family = poisson(link = "log"), 
+  family = poisson(link = "log"),
   data = df)
 
 summary(Pois1)
@@ -558,7 +554,7 @@ Res1 <- simulateResiduals(fittedModel = Pois1, plot = F)
 plotResiduals(Res1)
 # Misery
 
-# Plot model residuals against each covariate in the model:  
+# Plot model residuals against each covariate in the model:
 plotResiduals(Res1, form = df$eqr)
 plotResiduals(Res1, form = df$ppt)
 plotResiduals(Res1, form = df$tmin)
@@ -583,10 +579,10 @@ par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
 mydata <- data.frame(Res1$scaledResiduals, df$Ykm, df$Xkm)
 coordinates(mydata)    <- c("df.Ykm", "df.Xkm")
 Vario <- variogram(Res1$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 
 # test temporal autocorrelation
@@ -621,7 +617,7 @@ Res2 <- simulateResiduals(fittedModel = NB1, plot = F)
 plotResiduals(Res2)
 # Misery
 
-# Plot model residuals against each covariate in the model:  
+# Plot model residuals against each covariate in the model:
 plotResiduals(Res2, form = df$eqr)
 plotResiduals(Res2, form = df$ppt)
 plotResiduals(Res2, form = df$tmin)
@@ -645,10 +641,10 @@ par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
 mydata <- data.frame(Res2$scaledResiduals, df$Ykm, df$Xkm)
 coordinates(mydata)    <- c("df.Ykm", "df.Xkm")
 Vario <- variogram(Res2$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Fine
 
@@ -678,12 +674,12 @@ formula_str <- as.formula(formula_str)
 formula_str_nospace <- as.formula(formula_str_nospace)
 
 # Fit a Bernoulli model with logit link function
-Bern1 <- glmmTMB(formula = formula_str, 
-  family = binomial(link = logit), 
+Bern1 <- glmmTMB(formula = formula_str,
+  family = binomial(link = logit),
   data = df)
 
-Bern1.1 <- glmmTMB(formula = formula_str_nospace, 
-  family = binomial(link = logit), 
+Bern1.1 <- glmmTMB(formula = formula_str_nospace,
+  family = binomial(link = logit),
   data = df)
 
 summary(Bern1)
@@ -704,7 +700,7 @@ Res4 <- simulateResiduals(fittedModel = Bern1, plot = T)
 plotResiduals(Res4)
 # No problem here
 
-# Plot model residuals against each covariate in the model:  
+# Plot model residuals against each covariate in the model:
 plotResiduals(Res4, form = df$eqr)
 plotResiduals(Res4, form = df$ppt)
 plotResiduals(Res4, form = df$tmin)
@@ -727,10 +723,10 @@ testSpatialAutocorrelation(res_space, groupLocations$Xkm, groupLocations$Ykm)
 mydata <- data.frame(Res4$scaledResiduals, df$Ykm, df$Xkm)
 coordinates(mydata)    <- c("df.Ykm", "df.Xkm")
 Vario <- variogram(Res4$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # This is fine
 
@@ -744,7 +740,7 @@ testTemporalAutocorrelation(res_time, time = unique(df$year))
 
 # Create a zero-truncated variable by replacing zeros with NA
 df$vec_abund_pos
-df_pos <- df |> 
+df_pos <- df |>
   filter(!is.na(vec_abund_pos))
 
 # Define the dependent variable and independent variables
@@ -761,12 +757,12 @@ formula_str <- as.formula(formula_str)
 formula_str_nospace <- as.formula(formula_str_nospace)
 
 # Fit a truncated Poisson model
-TP1 <- glmmTMB(formula = formula_str, 
-               family = truncated_poisson(link = "log"), 
+TP1 <- glmmTMB(formula = formula_str,
+               family = truncated_poisson(link = "log"),
                data = df_pos)
 
-TP1.1 <- glmmTMB(formula = formula_str_nospace, 
-                 family = truncated_poisson(link = "log"), 
+TP1.1 <- glmmTMB(formula = formula_str_nospace,
+                 family = truncated_poisson(link = "log"),
                  data = df_pos)
 
 summary(TP1)
@@ -786,7 +782,7 @@ Res5 <- simulateResiduals(fittedModel = TP1, plot = T)
 plotResiduals(Res5)
 # Misery
 
-# Plot model residuals against each covariate in the model:  
+# Plot model residuals against each covariate in the model:
 plotResiduals(Res5, form = df_pos$eqr)
 plotResiduals(Res5, form = df_pos$ppt)
 plotResiduals(Res5, form = df_pos$tmin)
@@ -809,10 +805,10 @@ testSpatialAutocorrelation(res_space, groupLocations1$Xkm, groupLocations1$Ykm)
 mydata <- data.frame(Res5$scaledResiduals, df_pos$Ykm, df_pos$Xkm)
 coordinates(mydata)    <- c("df_pos.Ykm", "df_pos.Xkm")
 Vario <- variogram(Res5$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # this is not a horizontal line
 
@@ -824,12 +820,12 @@ testTemporalAutocorrelation(res_time, time = unique(df_pos$year))
 #========== ZAP model with truncated generalised poisson distributon ==========
 # Need an alternative distribution - try a generalised Poisson
 # (an alternative is a Conway-Maxwell Poisson)
-GP1 <- glmmTMB(formula = formula_str, 
-  family = truncated_genpois(link = "log"), 
+GP1 <- glmmTMB(formula = formula_str,
+  family = truncated_genpois(link = "log"),
   data = df_pos)
 
-GP1.1 <- glmmTMB(formula = formula_str_nospace, 
-  family = truncated_genpois(link = "log"), 
+GP1.1 <- glmmTMB(formula = formula_str_nospace,
+  family = truncated_genpois(link = "log"),
   data = df_pos)
 
 summary(GP1)
@@ -849,7 +845,7 @@ Res6 <- simulateResiduals(fittedModel = GP1, plot = T)
 plotResiduals(Res6)
 # Fine
 
-# Plot model residuals against each covariate in the model:  
+# Plot model residuals against each covariate in the model:
 plotResiduals(Res6, form = df_pos$eqr)
 plotResiduals(Res6, form = df_pos$ppt)
 plotResiduals(Res6, form = df_pos$tmin)
@@ -873,10 +869,10 @@ testSpatialAutocorrelation(res_space, groupLocations1$Xkm, groupLocations1$Ykm)
 mydata <- data.frame(Res6$scaledResiduals, df_pos$Ykm, df_pos$Xkm)
 coordinates(mydata)    <- c("df_pos.Ykm", "df_pos.Xkm")
 Vario <- variogram(Res6$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # This is not a horizontal line
 
@@ -887,12 +883,12 @@ testTemporalAutocorrelation(res_time, time = unique(df_pos$year))
 
 #==========  ZAP model w/ Zero-truncated Negative binomial distribution (quadratic parameterization) ==========
 # in nbinom2 overdispersion decreases with increasing phi (the Poisson limit is reached as phi goes to infinity).
-TNB2 <- glmmTMB(formula = formula_str, 
-  family = truncated_nbinom2(link = "log"), 
+TNB2 <- glmmTMB(formula = formula_str,
+  family = truncated_nbinom2(link = "log"),
   data = df_pos)
 
-TNB2.1 <- glmmTMB(formula = formula_str_nospace, 
-  family = truncated_nbinom2(link = "log"), 
+TNB2.1 <- glmmTMB(formula = formula_str_nospace,
+  family = truncated_nbinom2(link = "log"),
   data = df_pos)
 
 summary(TNB2)
@@ -915,7 +911,7 @@ Res7 <- simulateResiduals(fittedModel = TNB2, plot = T)
 plotResiduals(Res7)
 # Fine
 
-# Plot model residuals against each covariate in the model:  
+# Plot model residuals against each covariate in the model:
 plotResiduals(Res7, form = df_pos$eqr)
 plotResiduals(Res7, form = df_pos$ppt)
 plotResiduals(Res7, form = df_pos$tmin)
@@ -938,10 +934,10 @@ testSpatialAutocorrelation(res_space, groupLocations1$Xkm, groupLocations1$Ykm)
 mydata <- data.frame(Res7$scaledResiduals, df_pos$Ykm, df_pos$Xkm)
 coordinates(mydata)    <- c("df_pos.Ykm", "df_pos.Xkm")
 Vario <- variogram(Res7$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # This is not a horizontal line
 
@@ -950,7 +946,7 @@ res_time = recalculateResiduals(Res7, group = df_pos$year)
 testTemporalAutocorrelation(res_time, time = unique(df_pos$year))
 # this is fine
 
-#==================== Create formula =================== 
+#==================== Create formula ===================
 
 # Define the dependent variable and independent variables
 dependent_var <- "vec_abund"
@@ -966,11 +962,11 @@ formula_str <- as.formula(formula_str)
 formula_str_nospace <- as.formula(formula_str_nospace)
 
 #========== Tweedie model ==========
-TWD1 <- glmmTMB(formula = formula_str, 
+TWD1 <- glmmTMB(formula = formula_str,
                       family = tweedie(link = "log"),
                       data = df)
 
-TWD1.1 <- glmmTMB(formula = formula_str_nospace, 
+TWD1.1 <- glmmTMB(formula = formula_str_nospace,
                       family = tweedie(link = "log"),
                       data = df)
 
@@ -999,7 +995,7 @@ Res8 <- simulateResiduals(fittedModel = TWD1, plot = F)
 plotResiduals(Res8)
 # Misery
 
-# Plot model residuals against each covariate in the model:  
+# Plot model residuals against each covariate in the model:
 plotResiduals(Res8, form = df$eqr)
 plotResiduals(Res8, form = df$ppt)
 plotResiduals(Res8, form = df$tmin)
@@ -1023,10 +1019,10 @@ testSpatialAutocorrelation(res_space, groupLocations$Xkm, groupLocations$Ykm)
 mydata <- data.frame(Res8$scaledResiduals, df$Ykm, df$Xkm)
 coordinates(mydata)    <- c("df.Ykm", "df.Xkm")
 Vario <- variogram(Res8$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Fine
 
@@ -1035,14 +1031,14 @@ res_time = recalculateResiduals(Res8, group = df$year)
 testTemporalAutocorrelation(res_time, time = unique(df$year))
 # fine
 
-#==================== Visualise results =================== 
+#==================== Visualise results ===================
 
 # Model parameters
 summary(TNB2)
 summary(Bern1)
 
-tab_model(Bern1, 
-          TNB2, 
+tab_model(Bern1,
+          TNB2,
           show.intercept = F,
           show.est = T,
           show.se = T,
@@ -1058,14 +1054,14 @@ tab_model(Bern1,
           p.style = c("numeric"),
           title = "Zero-truncated hurdle model (ZANB)",
           dv.labels = c("Bernoulli distribution (Vector presence/absence)", "Zero-truncated negative binomal (Vector abundance)"),
-          pred.labels = c("Ecological quality ratio (EQR)", 
-                          "Precipitation (12-month mean)", 
-                          "Minimum temperature (12-month mean)", 
+          pred.labels = c("Ecological quality ratio (EQR)",
+                          "Precipitation (12-month mean)",
+                          "Minimum temperature (12-month mean)",
                           "Wind speed (12-month mean)",
                           "Year",
                           "Day of year (DOY)"))
 
-#==================== Clean up =================== 
+#==================== Clean up ===================
 
 library(pacman)
 # Clear data
@@ -1081,4 +1077,4 @@ cat("\014")  # Mimics ctrl+L
 # Clear mind :)
 
 
-#==================== End =================== 
+#==================== End ===================

@@ -1,4 +1,4 @@
-####################### Load packages and library files ####################### 
+####################### Load packages and library files #######################
 library(tidyverse)
 library(janitor) # cleans names of columns
 library(lattice)
@@ -24,20 +24,20 @@ data("worldHiresMapEnv")
 source("Additional functions/HighstatLibV11.R")
 
 
-####################### Load additonal settings and styles ####################### 
+####################### Load additonal settings and styles #######################
 My_theme <- theme(panel.background = element_blank(),
                   panel.border = element_rect(fill = NA, linewidth = 1),
-                  strip.background = element_rect(fill = "white", 
+                  strip.background = element_rect(fill = "white",
                                                   color = "white", linewidth = 1),
                   text = element_text(size = 12),
                   panel.grid.major = element_line(colour = "white", linewidth = 0.1),
                   panel.grid.minor = element_line(colour = "white", linewidth = 0.1))
 
 
-####################### Import data ####################### 
+####################### Import data #######################
 # Calculated index data from Lithuanian rivers and lakes (2010 - 2023)
-SA <- as_tibble(read.csv("Data/Diptera_indices_wLandcover_and_ENV_edited.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE)) |> 
-  clean_names() |> 
+SA <- as_tibble(read.csv("Data/Diptera_indices_wLandcover_and_ENV_edited.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE)) |>
+  clean_names() |>
   filter(waterbody_type == "river") |> #only keeps data from rivers
   # filter(waterbody_type == "lake") |> # only keeps data from lakes
   # filter(year >= 2013 & year <= 2022) |> # Remove years less than 2013 or greater than 2022 (when looking at lakes and rivers combined)
@@ -48,7 +48,7 @@ SA <- as_tibble(read.csv("Data/Diptera_indices_wLandcover_and_ENV_edited.csv", h
          fmonth          = factor(month), # make month a factor
          fsite_id        = factor(site_id), # make site_id a factor
          date            = as.Date(date, format = "%d/%m/%Y"), # make the dates dates
-         feqc            = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"), 
+         feqc            = factor(eqc, levels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                  labels = c("Bad", "Poor", "Moderate", "Good", "High"),
                                  ordered = T), # make EQC a factor and order the factor levels
          waterbody_name  = factor(waterbody_name), # make waterbody_name a factor
@@ -58,7 +58,7 @@ SA <- as_tibble(read.csv("Data/Diptera_indices_wLandcover_and_ENV_edited.csv", h
          arti_logit      = car::logit(artificial_surfaces_200m, percents = F, adjust = 0.025),
          natu_logit      = car::logit(forest_and_semi_natural_areas_200m, percents = F, adjust = 0.025),
          water_logit     = car::logit(water_bodies_200m, percents = F, adjust = 0.025),
-         wetland_logit   = car::logit(wetlands_200m, percents = F, adjust = 0.025)) |> 
+         wetland_logit   = car::logit(wetlands_200m, percents = F, adjust = 0.025)) |>
   rename(agriculture     = agricultural_areas_200m, # rename for brevity
          artificial      = artificial_surfaces_200m, # rename for brevity
          natural         = forest_and_semi_natural_areas_200m, # rename for brevity
@@ -80,7 +80,7 @@ head(SA)
 dim(SA)
 
 
-####################### Data coding issues ####################### 
+####################### Data coding issues #######################
 # For INLA we need UTM coordinates
 # See: https://stackoverflow.com/questions/18639967/converting-latitude-and-longitude-points-to-utm
 LongLatToUTM <- function(x,y,zone){
@@ -99,13 +99,13 @@ SA$Xkm <- SA$Xutm / 1000 # covert metres to KM
 SA$Ykm <- SA$Yutm / 1000 # covert metres to KM
 
 
-####################### Housekeeping ####################### 
+####################### Housekeeping #######################
 # Missing values?
-colSums(is.na(SA))  
-100 * colSums(is.na(SA)) / nrow(SA)  
+colSums(is.na(SA))
+100 * colSums(is.na(SA)) / nrow(SA)
 
 # How many observations do we have per year?
-table(SA$fyear) 
+table(SA$fyear)
 # slightly less observations in 2017, 2018, 2019
 
 # How many observations do we have per location x year?
@@ -116,41 +116,40 @@ print(obvs <- cbind(obvs, total = rowSums(obvs)))
 NROW(unique(SA$site_id))
 
 
-####################### Data exploration ####################### 
+####################### Data exploration #######################
 # Plot all sites
 # Spatial position of the sites
-plot(x = SA$longitude, 
-     y = SA$latitude, 
+plot(x = SA$longitude,
+     y = SA$latitude,
      pch = 3)
-xyplot(latitude ~ longitude, 
+xyplot(latitude ~ longitude,
        aspect = "fill",
        data = SA)
 
 range(SA$longitude, SA$latitude)
 MyCex <- 2 * sqrt(SA$vec_abund + 1) / 10
-register_google(key = "AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc")
-glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57), 
-                  maptype = "terrain")    
+glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57),
+                  maptype = "terrain")
 p <- ggmap(glgmap)
-p <- p + geom_point(aes(longitude, 
-                        latitude), 
-                    pch = 19, 
-                    size = MyCex, 
+p <- p + geom_point(aes(longitude,
+                        latitude),
+                    pch = 19,
+                    size = MyCex,
                     col = "red",
-                    data = SA) 
-p <- p + xlab("Longitude") + ylab("Latitude")  
+                    data = SA)
+p <- p + xlab("Longitude") + ylab("Latitude")
 p <- p + theme(text = element_text(size=15))
 p
 
 # And by year
 p <- ggmap(glgmap)
-p <- p + geom_point(aes(longitude, 
-                        latitude), 
-                    pch = 19, 
-                    size = MyCex, 
+p <- p + geom_point(aes(longitude,
+                        latitude),
+                    pch = 19,
+                    size = MyCex,
                     col = "red",
-                    data = SA) 
-p <- p + xlab("Longitude") + ylab("Latitude")  
+                    data = SA)
+p <- p + xlab("Longitude") + ylab("Latitude")
 p <- p + theme(text = element_text(size=15))
 p <- p + facet_wrap( ~ fyear)
 p # Some 2018 misery?
@@ -159,32 +158,32 @@ p # Some 2018 misery?
 # make data.frame with only positive vector values
 SA_postive <- SA[SA[, "vec_abund"] > 0, ]
 MyCex <- 2 * sqrt(SA_postive$vec_abund + 1) / 10
-glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57), 
-                  maptype = "terrain")    
+glgmap <- get_map(location = c(left = 21, bottom = 54, right = 27, top = 57),
+                  maptype = "terrain")
 p_pos <- ggmap(glgmap)
-p_pos <- p_pos + geom_point(aes(longitude, 
-                                latitude), 
-                            pch = 19, 
-                            size = MyCex, 
+p_pos <- p_pos + geom_point(aes(longitude,
+                                latitude),
+                            pch = 19,
+                            size = MyCex,
                             col = "red",
-                            data = SA_postive) 
-p_pos <- p_pos + xlab("Longitude") + ylab("Latitude")  
+                            data = SA_postive)
+p_pos <- p_pos + xlab("Longitude") + ylab("Latitude")
 p_pos <- p_pos + theme(text = element_text(size=15))
 p_pos
 
 custom_breaks <- c(1, 10, 100, 500, 1000)  # Adjust these values for finer control over the legend
 p_pos <- ggmap(glgmap) +
-  geom_point(aes(x = longitude, 
-                 y = latitude, 
+  geom_point(aes(x = longitude,
+                 y = latitude,
                  size = vec_abund),  # map size to vec_abund
-             pch = 19, 
-             col = "red", 
+             pch = 19,
+             col = "red",
              data = SA_postive) +
   scale_size_continuous(name = "Vector \nabundance",  # add legend title for size
                         breaks = custom_breaks,  # define custom breaks for the legend
                         range = c(0.1, 10)) +  # set range of point sizes
-  xlab("Longitude") + 
-  ylab("Latitude") + 
+  xlab("Longitude") +
+  ylab("Latitude") +
   theme(text = element_text(size = 15),
         panel.background = element_rect(fill = "#FAFBF3", color = NA),  # change plot panel background
         plot.background = element_rect(fill = "#FAFBF3", color = NA),   # change overall plot background
@@ -195,17 +194,17 @@ p_pos <- ggmap(glgmap) +
 
 p_pos
 
-# ggsave("C:/Users/natha/OneDrive/University of Johannesburg/Post-Doc/Nature Research Centre/How Changes in Bioversity Change Biodiversity/Seminars/October 2024/Curonian_Lagoon_Malaria_Prevalence_by_Genus.png", 
+# ggsave("C:/Users/natha/OneDrive/University of Johannesburg/Post-Doc/Nature Research Centre/How Changes in Bioversity Change Biodiversity/Seminars/October 2024/Curonian_Lagoon_Malaria_Prevalence_by_Genus.png",
 #        plot = p_pos, width = 8, height = 8, units = "in", dpi = 900, device = "png", bg = NA)
 
 p_pos <- ggmap(glgmap)
-p_pos <- p_pos + geom_point(aes(longitude, 
-                                latitude), 
-                            pch = 19, 
-                            size = MyCex, 
+p_pos <- p_pos + geom_point(aes(longitude,
+                                latitude),
+                            pch = 19,
+                            size = MyCex,
                             col = "red",
-                            data = SA_postive) 
-p_pos <- p_pos + xlab("Longitude") + ylab("Latitude")  
+                            data = SA_postive)
+p_pos <- p_pos + xlab("Longitude") + ylab("Latitude")
 p_pos <- p_pos + theme(text = element_text(size=15))
 p_pos <- p_pos + facet_wrap( ~ fyear)
 p_pos # Some 2018 misery?
@@ -227,100 +226,100 @@ Mydotplot(SA[, MyX])
 #  Use scatterplots
 
 # Variance inflation factors
-MyX <- c("fyear", 
-         "eqr", 
-         "agriculture", 
-         "artificial", 
+MyX <- c("fyear",
+         "eqr",
+         "agriculture",
+         "artificial",
          "natural",
-         "ppt", 
-         "q", 
-         "tmax", 
-         "tmin", 
+         "ppt",
+         "q",
+         "tmax",
+         "tmin",
          "ws")
 corvif(SA[, MyX])
 
-MyX <- c("fyear", 
-         "eqr", 
-         "agri_logit", 
-         "arti_logit", 
+MyX <- c("fyear",
+         "eqr",
+         "agri_logit",
+         "arti_logit",
          "natu_logit",
-         "ppt", 
-         "q", 
-         "tmax", 
-         "tmin", 
+         "ppt",
+         "q",
+         "tmax",
+         "tmin",
          "ws")
 corvif(SA[, MyX])
 # water and wetlands look weird. Lets drop them since they are likely not adding much and difficult to lobby for.
 # We have some collinearity!
 
 # This is with some variables removed
-MyX <- c("fyear", 
-         "eqr", 
-         "agriculture", 
-         "artificial", 
+MyX <- c("fyear",
+         "eqr",
+         "agriculture",
+         "artificial",
          "natural",
-         "ppt", 
-         "tmax", 
+         "ppt",
+         "tmax",
          "ws")
 corvif(SA[, MyX])
 
-MyX <- c("fyear", 
-         "eqr", 
-         "agri_logit", 
-         "arti_logit", 
+MyX <- c("fyear",
+         "eqr",
+         "agri_logit",
+         "arti_logit",
          "natu_logit",
-         "ppt", 
-         "tmax", 
+         "ppt",
+         "tmax",
          "ws")
 corvif(SA[, MyX])
 # agriculture and temporal terms appear to be correlated. Could be that there has been a shift in agricultural practices over time... Indeed there has been.
 
 # And this is without the temporal terms
-MyX <- c("eqr", 
-         "agriculture", 
-         "artificial", 
+MyX <- c("eqr",
+         "agriculture",
+         "artificial",
          "natural",
-         "ppt", 
-         "tmax", 
+         "ppt",
+         "tmax",
          "ws")
 corvif(SA[, MyX])
 
-MyX <- c("eqr", 
-         "agri_logit", 
+MyX <- c("eqr",
+         "agri_logit",
           "arti_logit",
          "natu_logit",
-         "ppt", 
-         "tmax", 
+         "ppt",
+         "tmax",
          "ws")
 corvif(SA[, MyX])
 # waterbody type is correlated to agriculture as well... lets remove it and keep agriculture as it seems more interesting.
 
 # Let's make a scatterplot of the continuous covariates
-MyX <- c("eqr", 
-         "agri_logit", 
+MyX <- c("eqr",
+         "agri_logit",
          "natu_logit",
-         "ppt", 
-         "tmax", 
+         "ppt",
+         "tmax",
          "ws")
 corvif(SA[, MyX])
 Mypairs(SA[, MyX])
 
-MyX <- c("eqr", 
-         "agri_logit", 
+MyX <- c("eqr",
+         "agri_logit",
          "natu_logit",
-         "ppt", 
-         "tmax", 
+         "ppt",
+         "tmax",
          "ws")
 corvif(SA[, MyX])
 Mypairs(SA[, MyX])
 
-SA |> 
-    ggpairs(columns = MyX, 
-          aes(alpha = 0.8), lower = list(continuous = "smooth_loess", 
+SA |>
+    ggpairs(columns = MyX,
+          aes(alpha = 0.8), lower = list(continuous = "smooth_loess",
               combo = wrap("facethist", binwidth = 5))) + My_theme
 
-# Agricultural and natural areas are collinear highly collinear. 
-# Agricultural and waterbody type are collinear highly collinear. 
+# Agricultural and natural areas are collinear highly collinear.
+# Agricultural and waterbody type are collinear highly collinear.
 # Just pick one. What about agriculture?
 
 # If we waterbody type agriculture, how do the VIF values look?
@@ -352,27 +351,27 @@ boxplot(ws ~ fyear,
 
 
 # Are Month and year related?
-plot(x = SA$year, 
-     y = SA$month, 
-     xlab = "Sampling year", 
+plot(x = SA$year,
+     y = SA$month,
+     xlab = "Sampling year",
      ylab = "Sampling month")
 
 # Add a little bit of random noise
 # to the points.
-plot(x = jitter(SA$year), 
-     y = jitter(SA$month), 
-     xlab = "Sampling year", 
+plot(x = jitter(SA$year),
+     y = jitter(SA$month),
+     xlab = "Sampling year",
      ylab = "Sampling month")
 
 # Yes...let's forget about month. We have data
-# from only 5 months, April - May for Lakes, September - November for rivers, 
+# from only 5 months, April - May for Lakes, September - November for rivers,
 # so there is probably no seasonality in the counts. And if
 # there is, then the other covariatres (e.g. temperature) will capture it.
 
-# If you play a little bit more with scatterplots, 
+# If you play a little bit more with scatterplots,
 # then we eventually end up with the following plan:
 
-#  Model vec_abund as a function of: 
+#  Model vec_abund as a function of:
 #      eqr - water quality
 #      year - temporal variability
 #      agriculture areas - disturbance?
@@ -384,14 +383,14 @@ plot(x = jitter(SA$year),
 #      and potentially spatial correlation with X and Y
 
 # Visualizing relationships
-MyX <- c("longitude", "latitude", 
+MyX <- c("longitude", "latitude",
          # "fyear", "fmonth",
-         "eqr", 
+         "eqr",
          "agri_logit", "natu_logit",
          "ppt", "tmax", "ws")
-MyMultipanel.ggp2(Z = SA, 
-                  varx = MyX, 
-                  vary = "vec_abund", 
+MyMultipanel.ggp2(Z = SA,
+                  varx = MyX,
+                  vary = "vec_abund",
                   ylab = "Vector abundance",
                   addSmoother = TRUE,
                   addRegressionLine = FALSE,
@@ -401,7 +400,7 @@ MyMultipanel.ggp2(Z = SA,
 
 # plot covariates against response variable
 par(mfrow = c(2,4), mar= c(5,5,2,2), cex.lab = 1.5)
-boxplot(vec_abund ~ fyear, 
+boxplot(vec_abund ~ fyear,
         xlab = "Year",
         ylab = "Vector abundance",
         data = SA)
@@ -451,8 +450,8 @@ round(100 * sum(SA$vec_abund == 0) / nrow(SA), 0)
 # 63% of zeros, that's a lot of zeros!
 
 
-####################### Start of analysis ####################### 
-############ Poisson GLM ########## 
+####################### Start of analysis #######################
+############ Poisson GLM ##########
 # Fit a Poisson GLM and assess whether there is overdispersion.
 # Standardize the covariates to avoid numerical problems.
 SA$eqr.std         <- MyStd(SA$eqr)
@@ -485,8 +484,8 @@ Dispersion
 # D. Zero inflation?       ==> ZIP / ZAP
 # E. Large variance?       ==> NB or Generalized Poisson
 # F. Correlation?          ==> GLMM
-# G. Non-linear patterns   ==> GAM 
-# H. Wrong link function   ==> Change it 
+# G. Non-linear patterns   ==> GAM
+# H. Wrong link function   ==> Change it
 
 # Your task is to find the culprit. If you pick the wrong one,
 # then you may end up with biased parameters.
@@ -498,11 +497,11 @@ Dispersion
 
 # A. Outliers?
 par(mfrow = c(1,1), mar = c(5,5,2,2), cex.lab = 1.5)
-plot(x = muPoi, 
+plot(x = muPoi,
      y = EPoi,
      xlab = "Fitted values",
      ylab = "Pearson residuals")
-abline(h = 0, lty = 2)     
+abline(h = 0, lty = 2)
 # No clear outliers.
 
 
@@ -512,71 +511,71 @@ plot(EPoi ~ eqr,
      xlab = "EQR",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ agriculture,
      xlab = "Agricultural coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ natural,
      xlab = "Natural & forested coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ ppt,
      xlab = "Precipitation",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ tmax,
      xlab = "Maximum temperatures",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ ws,
      xlab = "Wind speed",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 # Fit a smoother on the residuals and see whether it tells us something.
-library(mgcv)  
-T1 <- gam(EPoi ~ s(eqr), 
+library(mgcv)
+T1 <- gam(EPoi ~ s(eqr),
           data = SA)
 summary(T1)
 plot(T1)
 #That is not really convincing.
 
-T2 <- gam(EPoi ~ s(agriculture), 
+T2 <- gam(EPoi ~ s(agriculture),
           data = SA)
 summary(T2)
 plot(T2)
 #That is not really convincing.
 
-T3 <- gam(EPoi ~ s(natural), 
+T3 <- gam(EPoi ~ s(natural),
           data = SA)
 summary(T3)
 plot(T3)
 #That is interesting.
 
-T4 <- gam(EPoi ~ s(ppt), 
+T4 <- gam(EPoi ~ s(ppt),
           data = SA)
 summary(T4)
 plot(T4)
 #That is not really convincing.
 
-T5 <- gam(EPoi ~ s(tmax), 
+T5 <- gam(EPoi ~ s(tmax),
           data = SA)
 summary(T5)
 plot(T5)
 #That is interesting.
 
-T6 <- gam(EPoi ~ s(ws), 
+T6 <- gam(EPoi ~ s(ws),
           data = SA)
 summary(T6)
 plot(T6)
@@ -584,56 +583,56 @@ plot(T6)
 
 # Plot residuals vs each covariate not in the model.
 par(mfrow = c(2,3), mar= c(5,5,2,2), cex.lab = 1.5)
-boxplot(EPoi ~ fyear, 
+boxplot(EPoi ~ fyear,
         xlab = "Year",
         ylab = "Pearson residuals",
         data = SA)
-abline(h = 0, lty = 2)     
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ fmonth,
      xlab = "Month",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ water,
      xlab = "Water coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ wetland,
      xlab = "Wetland coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ q,
      xlab = "Discharge",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EPoi ~ tmin,
      xlab = "Minimum temperatures",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 # Fit a smoother on the residuals and see whether it tells us something.
-T1 <- gam(EPoi ~ s(water), 
+T1 <- gam(EPoi ~ s(water),
           data = SA)
 summary(T1)
 plot(T1)
 #That is not really convincing.
 
-T2 <- gam(EPoi ~ s(q), 
+T2 <- gam(EPoi ~ s(q),
           data = SA)
 summary(T2)
 plot(T2)
 #That is interesting.
 
-T3 <- gam(EPoi ~ s(tmin), 
+T3 <- gam(EPoi ~ s(tmin),
           data = SA)
 summary(T3)
 plot(T3)
@@ -649,17 +648,17 @@ boxplot(EPoi ~ fmonth, data = SA)
 mydata <- data.frame(EPoi, SA$Ykm, SA$Xkm)
 coordinates(mydata)    <- c("SA.Ykm", "SA.Xkm")
 GLM.Poi <- variogram(EPoi ~ 1, cutoff = 300, mydata,  cressie = TRUE)
-plot(GLM.Poi, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(GLM.Poi,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Is this a horizontal band of points? Not at all!
 
 # Zero inflation?
 # Simulation study
 I2 <- inla(vec_abund ~ eqr.std + agriculture.std + natural.std + ppt.std + tmax.std + ws.std,
-           family = "poisson", 
+           family = "poisson",
            data = SA,
            control.compute=list(config = TRUE))
 
@@ -671,8 +670,8 @@ X <- model.matrix(~eqr.std + agriculture.std + natural.std + ppt.std + tmax.std 
                   data = SA)
 
 MyParams <- colnames(X)
-RowNum.Betas <- lapply(MyParams, 
-                 function(x) 
+RowNum.Betas <- lapply(MyParams,
+                 function(x)
                    grep(x, rownames(SimData[[1]]$latent), fixed = TRUE) )
 RowNum.Betas <- as.numeric(RowNum.Betas)
 RowNum.Betas
@@ -694,23 +693,23 @@ for(i in 1:NSim){
   zeros[i] <- sum(Ysim[,i] == 0)
 }
 
-# Plot this data 
+# Plot this data
 par(mfrow = c(1,1), mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(zeros), 
+plot(table(zeros),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 1000 simulated data sets",
      xlim = c(0, 1500),
      main = "Simulation results")
-points(x = sum(SA$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(SA$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 # The red dot is the number of zeros in the original data set.
 # The data simulated from the Poisson model does not contain enough zeros.
 
 
-############ Create mesh########## 
+############ Create mesh##########
 library('maps')
 library('maptools')
 library('mapdata')
@@ -721,19 +720,19 @@ range(SA$longitude)
 range(SA$latitude)
 
 par(mfrow = c(1,1))
-LithuaniaPoly <- map("world", 
+LithuaniaPoly <- map("world",
                  regions = c("lithuania"),
-                 fill = TRUE, 
+                 fill = TRUE,
                  col = "white",
                  boundary = TRUE,
                  interior = TRUE,
-                 plot = TRUE, 
+                 plot = TRUE,
                  xlim = c(21, 27),
                  ylim = c(53, 57))
 points(x = SA$longitude, y = SA$latitude, col = "blue", pch = 1, cex = 1)
 
 IDs <- sapply(strsplit(LithuaniaPoly$names, ":"), function(x) x[1])
-LithuaniaSP <- map2SpatialPolygons(map = LithuaniaPoly, 
+LithuaniaSP <- map2SpatialPolygons(map = LithuaniaPoly,
                                    IDs = IDs,
                                    proj4string = CRS("+proj=longlat +datum=WGS84"))
 
@@ -766,7 +765,7 @@ BufferSP@proj4string <- LithuaniaSP@proj4string
 
 # Plot coastline and selected area
 par(mfrow = c(2,2), mar = c(5,5,2,2))
-plot(LithuaniaSP, 
+plot(LithuaniaSP,
      main = "Lithuania",
      axes = TRUE,
      ylim = c(53,57),
@@ -777,7 +776,7 @@ points(SA$longitude,
        col = 2)
 text(x = 20 ,y = 56.5,"A", cex = 1.5)
 
-plot(LithuaniaSP, 
+plot(LithuaniaSP,
      main = "Selected area",
      axes = TRUE,
      ylim = c(53,57),
@@ -800,22 +799,22 @@ text(x = 20 ,y = 56.5,"C", cex = 1.5)
 # Make the coastline less detailed
 my.tol <- 0.1
 my.area <- 0.1
-LithuaniaSP.smooth <- thinnedSpatialPoly(LithuaniaSP, 
-                                         tolerance = my.tol, 
-                                         minarea = my.area, 
-                                         topologyPreserve = TRUE, 
+LithuaniaSP.smooth <- thinnedSpatialPoly(LithuaniaSP,
+                                         tolerance = my.tol,
+                                         minarea = my.area,
+                                         topologyPreserve = TRUE,
                                          avoidGEOS = FALSE)
-BufferSP.smooth <- thinnedSpatialPoly(BufferSP, 
-                                      tolerance = my.tol, 
-                                      minarea = my.area, 
-                                      topologyPreserve = TRUE, 
+BufferSP.smooth <- thinnedSpatialPoly(BufferSP,
+                                      tolerance = my.tol,
+                                      minarea = my.area,
+                                      topologyPreserve = TRUE,
                                       avoidGEOS = FALSE)
 
 Lithuania.UTM = spTransform(LithuaniaSP, CRS("+proj=utm +zone=34 +north ellps=WGS84 +datum=WGS84"))
 Buffer.UTM = spTransform(BufferSP, CRS("+proj=utm +zone=34 +north ellps=WGS84 +datum=WGS84"))
 
-plot(Lithuania.UTM, 
-     axes = TRUE, 
+plot(Lithuania.UTM,
+     axes = TRUE,
      main = "Smoothed Lithuania",
      xlab = "X",
      ylab = "Y")
@@ -831,41 +830,41 @@ text(x = 20 ,y = 56.5, "D", cex = 1.5)
 Loc <- as.matrix(SA[,c("Xutm", "Yutm")])
 D <- dist(Loc)
 par(mfrow = c(1,2), mar = c(5,5,2,2), cex.lab = 1.5)
-hist(D / 1000, 
+hist(D / 1000,
      freq = TRUE,
-     main = "", 
+     main = "",
      xlab = "Distance between sites (km)",
      ylab = "Frequency")
 
-plot(x = sort(D) / 1000, 
-     y = (1:length(D))/length(D), 
+plot(x = sort(D) / 1000,
+     y = (1:length(D))/length(D),
      type = "l",
      xlab = "Distance between sites (km)",
      ylab = "Cumulative proportion")
-# Most site pairs have distances between them clustered between 100 and 200 km, 
+# Most site pairs have distances between them clustered between 100 and 200 km,
 # which is the core of your distance distribution.
 
-# The cumulative plot shows that almost all sites are within 300 km of each other, 
+# The cumulative plot shows that almost all sites are within 300 km of each other,
 # with the vast majority within 200 km.
-RangeGuess <- 75 * 1000 
+RangeGuess <- 75 * 1000
 # What is the distance for which we would expect dependency? 75km?
 # The smaller this value the better...but the longer the computing time
 
-# When determining a range guess for MaxEdge in a spatial model, the idea is to 
-# align this with the scale over which spatial correlation might occur due to dispersal. 
-# Based on the dispersal information of dipteran insects (which generally disperse within 
-# 2–50 km but could be carried farther by wind), I suggested using 50–100 km as a range guess 
-# for MaxEdge. This would allow the model to capture the relevant spatial structures created 
+# When determining a range guess for MaxEdge in a spatial model, the idea is to
+# align this with the scale over which spatial correlation might occur due to dispersal.
+# Based on the dispersal information of dipteran insects (which generally disperse within
+# 2–50 km but could be carried farther by wind), I suggested using 50–100 km as a range guess
+# for MaxEdge. This would allow the model to capture the relevant spatial structures created
 # by dispersal over this range, while also considering the distances between the sites.
 # Recommended settings:
 MaxEdge    <- RangeGuess / 5
 
-# The convex option puts the boundary of the innerpart closer to the points. 
+# The convex option puts the boundary of the innerpart closer to the points.
 # Saves some computing time but maybe not use it for a paper.
 ConvHull   <- inla.nonconvex.hull(Loc, convex = 50 * 1000)
 mesh1      <- inla.mesh.2d(loc = Loc,
                            boundary = ConvHull,
-                           max.edge = c(1, 5) * MaxEdge, 
+                           max.edge = c(1, 5) * MaxEdge,
                            cutoff  = MaxEdge / 5)
 
 par(mfrow = c(1, 1))
@@ -878,7 +877,7 @@ mesh1$n
 Boundary <- inla.sp2segment(Buffer.UTM)
 mesh2  <- inla.mesh.2d(loc = Loc,
                        boundary = Boundary,
-                       max.edge = c(1, 5) * MaxEdge, 
+                       max.edge = c(1, 5) * MaxEdge,
                        cutoff  = MaxEdge / 5)
 plot(mesh2)
 points(Loc, pch = 16)
@@ -917,10 +916,10 @@ Land2 <- gDifference(AreaSP2, Buffer.UTM)
 plot(Land2)
 
 
-############ Spatial analysis ########## 
+############ Spatial analysis ##########
 # lets start doing some spatial things! Yay!
 # Define the weighting factors a_ik (also called the projector matrix).
-# The sigma parameter represents the marginal standard deviation of the spatial random field. 
+# The sigma parameter represents the marginal standard deviation of the spatial random field.
 # It controls the variability of the spatial process—essentially, how much variation is explained by the spatial random field.
 A1 <- inla.spde.make.A(mesh1, loc = Loc)
 A2 <- inla.spde.make.A(mesh2, loc = Loc)
@@ -932,16 +931,16 @@ A2 <- inla.spde.make.A(mesh2, loc = Loc)
 # of smoothing that the spatial random field will do.
 # The larger it is, the smoother the spatial random field.
 # It allows to avoid overfitting.
-spde1 <- inla.spde2.pcmatern(mesh1, 
-                             prior.range = c(50 * 1000 , 0.5), 
+spde1 <- inla.spde2.pcmatern(mesh1,
+                             prior.range = c(50 * 1000 , 0.5),
                              prior.sigma = c(1.5, 0.01))
-                             # prior.range = c(50 * 1000 , 0.01), 
+                             # prior.range = c(50 * 1000 , 0.01),
                              # prior.sigma = c(1.5, 0.01))  This was the first attempt
 
-spde2 <- inla.spde2.pcmatern(mesh2, 
-                             prior.range = c(50 * 1000, 0.5), 
+spde2 <- inla.spde2.pcmatern(mesh2,
+                             prior.range = c(50 * 1000, 0.5),
                              prior.sigma = c(1.5, 0.01))
-                             # prior.range = c(50 * 1000, 0.01), 
+                             # prior.range = c(50 * 1000, 0.01),
                              # prior.sigma = c(1.5, 0.01)) This was the first attempt
 
 # We used a simple glm to get some feeling about sensible values
@@ -949,7 +948,7 @@ spde2 <- inla.spde2.pcmatern(mesh2,
 range(SA$vec_abund)
 # P(Range < 50 km ) = 0.05
 # P(sigma > ) = 0.05
-# SB = exp(u_i) 
+# SB = exp(u_i)
 # some u_i have to be as large as 13.496 to cover 1360
 # If u_i ~ N(0, sigma_u^2) then it is unlikley that sigma_u > 1.5
 #P(sigma > 1.5) = 0.05
@@ -961,8 +960,8 @@ w1.index <- inla.spde.make.index(name = 'w', n.spde  = spde1$n.spde)
 w2.index <- inla.spde.make.index(name = 'w', n.spde  = spde2$n.spde)
 
 # Define the the stack
-Xm <- model.matrix(~eqr.std + 
-                     agriculture.std + natural.std + 
+Xm <- model.matrix(~eqr.std +
+                     agriculture.std + natural.std +
                      ppt.std + tmax.std + ws.std, data = SA)
 N <- nrow(SA)
 X <- data.frame(eqr.std         = Xm[, 2],
@@ -976,9 +975,9 @@ X <- data.frame(eqr.std         = Xm[, 2],
 # And this is the stack for the Poisson model
 Stack.mesh1 <- inla.stack(
   tag  = "Fit",
-  data = list(y = SA$vec_abund),  
-  A    = list(1, 1, A1, 1),                      
-  effects = list( 
+  data = list(y = SA$vec_abund),
+  A    = list(1, 1, A1, 1),
+  effects = list(
     Intercept  = rep(1, N),
     X  = as.data.frame(X),
     w = w1.index,
@@ -986,26 +985,26 @@ Stack.mesh1 <- inla.stack(
 
 Stack.mesh2 <- inla.stack(
   tag  = "Fit",
-  data = list(y = SA$vec_abund),  
-  A    = list(1, 1, A2, 1),                      
-  effects = list(      
+  data = list(y = SA$vec_abund),
+  A    = list(1, 1, A2, 1),
+  effects = list(
     Intercept  = rep(1, N),
     X    = as.data.frame(X),
     w    = w2.index,
     iidx = 1:nrow(X)))
 
 # Define the formula
-fPois.mesh1 <- y ~ -1 + Intercept + 
-  eqr.std + 
-  agriculture.std + natural.std + 
+fPois.mesh1 <- y ~ -1 + Intercept +
+  eqr.std +
+  agriculture.std + natural.std +
   ppt.std + tmax.std + ws.std +
-  f(w, model = spde1) 
+  f(w, model = spde1)
 
-fPois.mesh2 <- y ~ -1 + Intercept + 
-  eqr.std + 
-  agriculture.std + natural.std + 
+fPois.mesh2 <- y ~ -1 + Intercept +
+  eqr.std +
+  agriculture.std + natural.std +
   ppt.std + tmax.std + ws.std +
-  f(w, model = spde2) 
+  f(w, model = spde2)
 
 # Executing the model in R-INLA
 Pois.mesh1 <- inla(fPois.mesh1,
@@ -1024,8 +1023,8 @@ Pois.mesh2 <- inla(fPois.mesh2,
 dic  <- c(Pois.mesh1$dic$dic, Pois.mesh2$dic$dic)
 waic <- c(Pois.mesh1$waic$waic, Pois.mesh2$waic$waic)
 DicWaic     <- cbind(dic, waic)
-rownames(DicWaic) <- c("Spatial Poisson GLM with mesh 1",  
-                       "Spatial Poisson GLM with mesh 2")  
+rownames(DicWaic) <- c("Spatial Poisson GLM with mesh 1",
+                       "Spatial Poisson GLM with mesh 2")
 DicWaic
 
 summary(Pois.mesh1)
@@ -1038,81 +1037,81 @@ summary(Pois.mesh2)
 PlotField <- function(field, mesh, ContourMap, xlim, ylim, Add=FALSE,...){
   stopifnot(length(field) == mesh$n)
   # Plotting region to be the same as the study area polygon
-  if (missing(xlim)) xlim <- ContourMap@bbox[1, ] 
+  if (missing(xlim)) xlim <- ContourMap@bbox[1, ]
   if (missing(ylim)) ylim <- ContourMap@bbox[2, ]
-  
-  # inla.mesh.projector: it creates a lattice using the mesh and specified ranges. 
-  proj <- inla.mesh.projector(mesh, 
-                              xlim = xlim, 
-                              ylim = ylim, 
+
+  # inla.mesh.projector: it creates a lattice using the mesh and specified ranges.
+  proj <- inla.mesh.projector(mesh,
+                              xlim = xlim,
+                              ylim = ylim,
                               dims = c(300, 300))
-  # The function inla.mesh.project can then 
+  # The function inla.mesh.project can then
   # be used to project the w's on this grid.
   field.proj <- inla.mesh.project(proj, field)
-  
+
   # And plot the whole thing
-  image.plot(list(x = proj$x, 
+  image.plot(list(x = proj$x,
                   y = proj$y,
-                  z = field.proj), 
-             xlim = xlim, 
+                  z = field.proj),
+             xlim = xlim,
              ylim = ylim,
              asp = 1,
              add = Add,
-             ...)  
+             ...)
 }
 
 summary(Pois.mesh1)
 
-# Plot the spatial random field 
-w1.pm <- Pois.mesh1$summary.random$w$mean  
-w1.sd <- Pois.mesh1$summary.random$w$sd  
+# Plot the spatial random field
+w1.pm <- Pois.mesh1$summary.random$w$mean
+w1.sd <- Pois.mesh1$summary.random$w$sd
 
-w2.pm <- Pois.mesh2$summary.random$w$mean  
-w2.sd <- Pois.mesh2$summary.random$w$sd 
+w2.pm <- Pois.mesh2$summary.random$w$mean
+w2.sd <- Pois.mesh2$summary.random$w$sd
 
 # Its plotting time!
-PlotField(field = w1.pm, 
-          mesh = mesh1, 
+PlotField(field = w1.pm,
+          mesh = mesh1,
           xlim = range(mesh1$loc[,1]+5000),
           ylim = range(mesh1$loc[,2]+5000))
 
 # Add the sampling locations (in UTM)
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 
 # Get rid of the colours outside Lithuania (i.e., the bad lands)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 
 plot(Lithuania.UTM, add = TRUE)
 
 # And the spatial random field for mesh 2
-PlotField(field = w2.pm, 
-          mesh = mesh2, 
+PlotField(field = w2.pm,
+          mesh = mesh2,
           xlim = range(mesh1$loc[,1]),
           ylim = range(mesh1$loc[,2]))
 
 # Add the sampling locations (in UTM)
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 
 #Determine the area outside the study area
-plot(Land2, 
-     col = "white", 
+plot(Land2,
+     col = "white",
      add = TRUE,
      border = "white")
 
 plot(Buffer.UTM, add = TRUE)
 
-# Model validation 
+# Model validation
 # Plot fitted values versus observed data
 N.rows <- 1:nrow(SA)
 mu.SpatPois <- Pois.mesh1$summary.fitted.values[N.rows, "mean"] # this is the number of rows in SA
@@ -1166,15 +1165,15 @@ for (i in 1:NSim){
 
 # plot
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosPoisSpat), 
+plot(table(ZerosPoisSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 1500),
      main = "Simulation results")
-points(x = sum(SA$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(SA$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(SA$vec_abund == 0) > ZerosPoisSpat) / 10000
@@ -1182,22 +1181,22 @@ sum(SA$vec_abund == 0)
 # cry... there are too few zeros :'(
 
 
-############ Poisson GLM with observation level random effects ########## 
-# Poisson GLM with observation level random effects for meshes 1 and 2. 
+############ Poisson GLM with observation level random effects ##########
+# Poisson GLM with observation level random effects for meshes 1 and 2.
 # After that the Negative binomial GLM is fitted with meshes 1 and 2.
 
 # Poisson + spatial correlation + OLRE
-hyper.iid <- list(prec = list(prior = 'pc.prec', param = c(0.5, 0.001))) 
-fPois.olre.mesh1 <- y ~ -1 + Intercept + 
-  eqr.std + 
-  agriculture.std + natural.std + 
+hyper.iid <- list(prec = list(prior = 'pc.prec', param = c(0.5, 0.001)))
+fPois.olre.mesh1 <- y ~ -1 + Intercept +
+  eqr.std +
+  agriculture.std + natural.std +
   ppt.std + tmax.std + ws.std +
   f(w, model = spde1) +
   f(iidx, model="iid", hyper = hyper.iid)
 
-fPois.olre.mesh2 <- y ~ -1 + Intercept + 
-  eqr.std + 
-  agriculture.std + natural.std + 
+fPois.olre.mesh2 <- y ~ -1 + Intercept +
+  eqr.std +
+  agriculture.std + natural.std +
   ppt.std + tmax.std + ws.std +
   f(w, model = spde2) +
   f(iidx, model="iid", hyper = hyper.iid)
@@ -1223,18 +1222,18 @@ plot(x  = mu.Pois.olre,
      xlab = "Fitted values",
      ylab = "Observed vector numbers")
 
-############ NB GLM + spatial correlation ########## 
-fNB.mesh1 <- y ~ -1 + Intercept + 
-  eqr.std + 
-  agriculture.std + natural.std + 
+############ NB GLM + spatial correlation ##########
+fNB.mesh1 <- y ~ -1 + Intercept +
+  eqr.std +
+  agriculture.std + natural.std +
   ppt.std + tmax.std + ws.std +
-  f(w, model = spde1) 
+  f(w, model = spde1)
 
-fNB.mesh2 <- y ~ -1 + Intercept + 
-  eqr.std + 
-  agriculture.std + natural.std + 
+fNB.mesh2 <- y ~ -1 + Intercept +
+  eqr.std +
+  agriculture.std + natural.std +
   ppt.std + tmax.std + ws.std +
-  f(w, model = spde2) 
+  f(w, model = spde2)
 
 # Negative binomial with spatial correlation
 NB.mesh1 <- inla(fNB.mesh1,
@@ -1263,36 +1262,36 @@ summary(NB.mesh1)
 summary(NB.mesh2)
 
 # And the spatial random field for mesh 1
-w1NB.pm <- NB.mesh1$summary.random$w$mean  
-w1NB.sd <- NB.mesh1$summary.random$w$sd  
+w1NB.pm <- NB.mesh1$summary.random$w$mean
+w1NB.sd <- NB.mesh1$summary.random$w$sd
 
-PlotField(field = w1NB.pm, 
-          mesh = mesh1, 
+PlotField(field = w1NB.pm,
+          mesh = mesh1,
           xlim = range(mesh1$loc[,1]),
           ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land1, add = TRUE)
 
 
-PlotField(field = w1NB.sd, 
-          mesh = mesh1, 
+PlotField(field = w1NB.sd,
+          mesh = mesh1,
           xlim = range(mesh1$loc[,1]),
           ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Land1, add = TRUE)
@@ -1339,21 +1338,21 @@ for (i in 1:NSim){
   Beta  <- SimData[[i]]$latent[RowNum.Pos]
   w     <- SimData[[i]]$latent[RowNum.w]
   mu       <- exp(Xm %*% Beta + Am1 %*% w)
-  YNBSpat[,i]    <- rnegbin(N, mu = mu, theta = k)  
+  YNBSpat[,i]    <- rnegbin(N, mu = mu, theta = k)
   ZerosNBSpat[i] <- sum(YNBSpat[,i] == 0)
 }
 
 # plot
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosNBSpat), 
+plot(table(ZerosNBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(1000, 2000),
      main = "Simulation results")
-points(x = sum(SA$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(SA$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(SA$vec_abund == 0) > ZerosNBSpat) / 10000
@@ -1361,7 +1360,7 @@ sum(SA$vec_abund == 0)
 # cry... now there are too many zeros :'(
 
 
-############ ZAP model with spatial correlation ########## 
+############ ZAP model with spatial correlation ##########
 # ZAP model with spatial correlation
 # Running the model in R-INLA
 SA$vec_abund_pa
@@ -1373,15 +1372,15 @@ w2.pos.index <- inla.spde.make.index(name = 'wpos', n.spde  = spde2$n.spde)
 w1.01.index <- inla.spde.make.index(name = 'w01', n.spde  = spde1$n.spde)
 w2.01.index <- inla.spde.make.index(name = 'w01', n.spde  = spde2$n.spde)
 
-Xm <- model.matrix(~eqr.std + 
-                     agriculture.std + natural.std + 
+Xm <- model.matrix(~eqr.std +
+                     agriculture.std + natural.std +
                      ppt.std + tmax.std + ws.std,
                    data = SA)
 
 N <- nrow(SA)
-X <- data.frame(Intercept.pos     = rep(1, N), 
+X <- data.frame(Intercept.pos     = rep(1, N),
                 eqr.pos           = Xm[, 2],
-                agriculture.pos   = Xm[, 3], 
+                agriculture.pos   = Xm[, 3],
                 natural.pos       = Xm[, 4],
                 ppt.pos           = Xm[, 5],
                 tmax.pos          = Xm[, 6],
@@ -1390,7 +1389,7 @@ X <- data.frame(Intercept.pos     = rep(1, N),
 
 X01 <- data.frame(Intercept.01         = rep(1, N),
                   eqr.01               = Xm[, 2],
-                  agriculture.01       = Xm[, 3], 
+                  agriculture.01       = Xm[, 3],
                   natural.01           = Xm[, 4],
                   ppt.01               = Xm[, 5],
                   tmax.01              = Xm[, 6],
@@ -1399,34 +1398,34 @@ X01 <- data.frame(Intercept.01         = rep(1, N),
 # And this is the stack for the ZAP model
 StackPos.mesh1 <- inla.stack(
   tag  = "FitPos",
-  data = list(AllY = cbind(SA$vec_abund_pos, NA)),  
-  A    = list(1, A1),                      
-  effects = list(            
+  data = list(AllY = cbind(SA$vec_abund_pos, NA)),
+  A    = list(1, A1),
+  effects = list(
     Xpos = as.data.frame(X),
     wpos = w1.pos.index))
 
 StackPos.mesh2 <- inla.stack(
   tag  = "FitPos",
-  data = list(AllY = cbind(SA$vec_abund_pos, NA)),  
-  A    = list(1, A2),                      
-  effects = list(            
+  data = list(AllY = cbind(SA$vec_abund_pos, NA)),
+  A    = list(1, A2),
+  effects = list(
          Xpos = as.data.frame(X),
          wpos = w2.pos.index))
 
 Stack01.mesh1 <- inla.stack(
   tag  = "Fit01",
-  data = list(AllY = cbind(NA, SA$vec_abund_pa)),  
-  A    = list(1, A1),                      
-  effects = list(      
+  data = list(AllY = cbind(NA, SA$vec_abund_pa)),
+  A    = list(1, A1),
+  effects = list(
     X01 = as.data.frame(X01),
     w01 = w1.01.index))
 
 
 Stack01.mesh2 <- inla.stack(
   tag  = "Fit01",
-  data = list(AllY = cbind(NA, SA$vec_abund_pa)),  
-  A    = list(1, A2),                      
-  effects = list(      
+  data = list(AllY = cbind(NA, SA$vec_abund_pa)),
+  A    = list(1, A2),
+  effects = list(
     X01 = as.data.frame(X01),
     w01 = w2.01.index))
 
@@ -1435,21 +1434,21 @@ Stack.ZA.mesh2 <- inla.stack(StackPos.mesh2, Stack01.mesh2)
 
 
 #	Specify the model formula
-fZA.mesh1  <- AllY ~ -1 + Intercept.pos + eqr.pos + agriculture.pos + natural.pos + ppt.pos + tmax.pos + ws.pos + 
+fZA.mesh1  <- AllY ~ -1 + Intercept.pos + eqr.pos + agriculture.pos + natural.pos + ppt.pos + tmax.pos + ws.pos +
                        f(wpos, model = spde1) +
-                       Intercept.01 + eqr.01 + agriculture.01 + natural.01 + ppt.01 + tmax.01 + ws.01 + 
+                       Intercept.01 + eqr.01 + agriculture.01 + natural.01 + ppt.01 + tmax.01 + ws.01 +
                        f(w01, model = spde1)
 
-fZA.mesh2  <- AllY ~ -1 + Intercept.pos + eqr.pos + agriculture.pos + natural.pos + ppt.pos + tmax.pos + ws.pos + 
+fZA.mesh2  <- AllY ~ -1 + Intercept.pos + eqr.pos + agriculture.pos + natural.pos + ppt.pos + tmax.pos + ws.pos +
                       f(wpos, model = spde2) +
-                      Intercept.01 + eqr.01 + agriculture.01 + natural.01 + ppt.01 + tmax.01 + ws.01 + 
+                      Intercept.01 + eqr.01 + agriculture.01 + natural.01 + ppt.01 + tmax.01 + ws.01 +
                       f(w01, model = spde2)
 
 
 # Run model
 HyperZap <- list(theta = list(initial = -10, fixed = TRUE))
 ZAP.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatedpoisson0", "binomial"),  
+                   family = c("zeroinflatedpoisson0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -1485,8 +1484,8 @@ X01     <- as.matrix(X01)
 
 A1.m   <- as.matrix(A1)
 # A2.m   <- as.matrix(A2)
-wPos   <- ZAP.mesh1$summary.random$wpos$mean 
-w01    <- ZAP.mesh1$summary.random$w01$mean 
+wPos   <- ZAP.mesh1$summary.random$wpos$mean
+w01    <- ZAP.mesh1$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A1.m %*% wPos)
 mu.ZTruncPois.self <- mu /  (1 - exp(-mu))
@@ -1505,7 +1504,7 @@ Dispersion
 
 # Simulation study ZAP model with spatial correlation
 ZAP.mesh1.sim <- inla(fZA.mesh1,
-                      family = c("zeroinflatedpoisson0", "binomial"),  
+                      family = c("zeroinflatedpoisson0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -1565,31 +1564,31 @@ for (i in 1:NSim) {
   skips <- 0
   skipped_due_to_na <- FALSE
   skip_iteration <- FALSE
-  
+
   repeat {
     BetaPos <- SimData[[i]]$latent[RowNum.Pos]
     Beta01 <- SimData[[i]]$latent[RowNum.01]
     wPos <- SimData[[i]]$latent[RowNum.wPos]
     w01 <- SimData[[i]]$latent[RowNum.w01]
-    
+
     mu <- exp(Xpos %*% BetaPos + A1.m %*% wPos)
     Pi <- exp(X01 %*% Beta01 + A1.m %*% w01) / (1 + exp(X01 %*% Beta01 + A1.m %*% w01))
-    
+
     # Check for NA values in mu or Pi
     if (any(is.na(mu)) || any(is.na(Pi))) {
       message(paste("Iteration", i, ": Found NA values in mu or Pi. Retrying."))
       skips <- skips + 1
-      
+
       if (skips == max_skips) {
         message(paste("Iteration", i, ": Skipping due to persistent NA values after", max_skips, "retries."))
         skipped_due_to_na <- TRUE
         skip_iteration <- TRUE
         break
       }
-      
+
       next # Retry the iteration
     }
-    
+
     # Check for too-small values in mu and replace
     if (any(mu < 1e-8, na.rm = TRUE)) {
       while (any(mu < 1e-8, na.rm = TRUE) && skips < max_skips) {
@@ -1598,7 +1597,7 @@ for (i in 1:NSim) {
         skips <- skips + 1
         replacements <- replacements + 1 # Track replacements
       }
-      
+
       if (skips == max_skips) {
         message(paste("Iteration", i, ": Skipping after", max_skips, "adjustments due to small mu values."))
         skipped_due_to_na <- TRUE
@@ -1606,7 +1605,7 @@ for (i in 1:NSim) {
         break
       }
     }
-    
+
     # Catch errors/warnings in VGAM::rzapois using tryCatch
     tryCatch({
       YZAPSpat[, i] <- VGAM::rzapois(N, lambda = mu, pobs0 = 1 - Pi)
@@ -1625,19 +1624,19 @@ for (i in 1:NSim) {
       skipped_due_to_na <- TRUE
       skip_iteration <- TRUE
     })
-    
+
     # Break the repeat loop if an error was encountered
     if (skip_iteration) break
-    
+
     # If no issues, proceed with the rest of the iteration
     break # Exit the repeat loop and continue to the next iteration
   }
-  
+
   # Store information about replacements or skips for this iteration
   if (replacements > 0 || skipped_due_to_na) {
     replacement_info <- rbind(replacement_info, data.frame(Iteration = i, Replacements = replacements, SkippedDueToNA = skipped_due_to_na))
   }
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -1651,15 +1650,15 @@ total_replacements <- nrow(replacement_info)
 
 # plot the output
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZAPSpat), 
+plot(table(ZerosZAPSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 1000),
      main = "Simulation results")
-points(x = sum(SA$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(SA$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(SA$vec_abund == 0) > ZerosZAPSpat) / 10000
@@ -1697,8 +1696,8 @@ plot(residuals_sim)
 hist(residuals_sim$scaledResiduals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR = SA$eqr, 
-                         Agriculture = SA$agriculture, 
+predictors <- data.frame(EQR = SA$eqr,
+                         Agriculture = SA$agriculture,
                          Natural = SA$natural,
                          Precipitation = SA$ppt,
                          Maximum_temperature = SA$tmax,
@@ -1717,35 +1716,35 @@ for (i in 1:ncol(predictors)) {
 
 # Results of the ZAP model with spatial correlation
 # Plot the spatial random field for the ZAP with mesh 1
-wpm.ZAP.Pos <- ZAP.mesh1$summary.random$wpos$mean  
-wpm.ZAP.01  <- ZAP.mesh1$summary.random$w01$mean  
-wsd.ZAP.Pos <- ZAP.mesh1$summary.random$wpos$sd  
-wsd.ZAP.01  <- ZAP.mesh1$summary.random$w01$sd  
+wpm.ZAP.Pos <- ZAP.mesh1$summary.random$wpos$mean
+wpm.ZAP.01  <- ZAP.mesh1$summary.random$w01$mean
+wsd.ZAP.Pos <- ZAP.mesh1$summary.random$wpos$sd
+wsd.ZAP.01  <- ZAP.mesh1$summary.random$w01$sd
 
 # Plot the spatial random field again, and add white space for the non-study area
 par(mar = c(5,5,2,2), cex.lab = 1.5)
 PlotField(field = wpm.ZAP.Pos, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZAP.Pos, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -1753,35 +1752,35 @@ plot(Lithuania.UTM, add = TRUE)
 # Binary part of the ZANB
 PlotField(field = wpm.ZAP.01, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZAP.01, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 
-############ ZANB model with spatial correlation ########## 
+############ ZANB model with spatial correlation ##########
 # ZANB model with spatial correlation
 ZANB.mesh1 <- inla(fZA.mesh1,
-                  family = c("zeroinflatednbinomial0", "binomial"),  
+                  family = c("zeroinflatednbinomial0", "binomial"),
                   control.family = list(list(hyper = HyperZap),
                                         list()),
                   data = inla.stack.data(Stack.ZA.mesh1),
@@ -1816,8 +1815,8 @@ X01  <- as.matrix(X01)
 
 A1.m <- as.matrix(A1)
 A2.m <- as.matrix(A2)
-wPos   <- ZANB.mesh1$summary.random$wpos$mean 
-w01    <- ZANB.mesh1$summary.random$w01$mean 
+wPos   <- ZANB.mesh1$summary.random$wpos$mean
+w01    <- ZANB.mesh1$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A1.m %*% wPos)
 P0 <- (k / (mu + k))^k
@@ -1845,7 +1844,7 @@ summary(ZANB.mesh1)
 
 # Simulation study ZINB model with spatial correlation
 ZANB.mesh1.sim <- inla(fZA.mesh1,
-                       family = c("zeroinflatednbinomial0", "binomial"),  
+                       family = c("zeroinflatednbinomial0", "binomial"),
                        control.family = list(list(hyper = HyperZap),
                                              list()),
                        data = inla.stack.data(Stack.ZA.mesh1),
@@ -1897,14 +1896,14 @@ for (i in 1:NSim) {
   wPos <- SimData[[i]]$latent[RowNum.wPos]
   w01 <- SimData[[i]]$latent[RowNum.w01]
   k   <- SimData[[i]]$hyperpar[1] # strictly speaking, simulated values should be used, but there is a tendency for k parameters to not look very random
-  
+
   mu <- exp(Xpos %*% BetaPos + A1.m %*% wPos)
   Pi <- exp(X01 %*% Beta01 + A1.m %*% w01) / (1 + exp(X01 %*% Beta01 + A1.m %*% w01))
-  
+
   # Generate the values using the VGAM function
-  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)  
+  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)
   ZerosZANBSpat[i] <- sum(YNBSpat[, i] == 0)
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -1913,15 +1912,15 @@ for (i in 1:NSim) {
 close(pb)
 
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZANBSpat), 
+plot(table(ZerosZANBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 2000),
      main = "Simulation results")
-points(x = sum(SA$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(SA$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(SA$vec_abund == 0) > ZerosZANBSpat) / 1000
@@ -1957,8 +1956,8 @@ plot(residuals_sim)
 hist(residuals_sim$scaledResiduals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR = SA$eqr, 
-                         Agriculture = SA$agriculture, 
+predictors <- data.frame(EQR = SA$eqr,
+                         Agriculture = SA$agriculture,
                          Natural = SA$natural,
                          Precipitation = SA$ppt,
                          Maximum_temperature = SA$tmax,
@@ -1976,35 +1975,35 @@ for (i in 1:ncol(predictors)) {
 }
 
 # Results of the ZANB model with spatial correlation
-wpm.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$mean  
-wpm.ZANB.01  <- ZANB.mesh1$summary.random$w01$mean  
-wsd.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$sd  
-wsd.ZANB.01  <- ZANB.mesh1$summary.random$w01$sd  
+wpm.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$mean
+wpm.ZANB.01  <- ZANB.mesh1$summary.random$w01$mean
+wsd.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$sd
+wsd.ZANB.01  <- ZANB.mesh1$summary.random$w01$sd
 
 # Plot the spatial random field again, and add white space for the non-study area
 par(mfrow = c(1, 1), mar = c(5,5,2,2), cex.lab = 1.5)
 PlotField(field = wpm.ZANB.Pos, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.Pos, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -2012,26 +2011,26 @@ plot(Lithuania.UTM, add = TRUE)
 # Binary part of the ZANB
 PlotField(field = wpm.ZANB.01, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.01, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -2051,7 +2050,7 @@ dic  <- c(Pois.mesh1$dic$dic, Pois.mesh2$dic$dic,
           Pois.olre.mesh1$dic$dic, Pois.olre.mesh2$dic$dic,
           NB.mesh1$dic$dic, NB.mesh2$dic$dic,
           DIC.ZAP.mesh1, DIC.ZAP.mesh2,
-          DIC.ZANB.mesh1, DIC.ZANB.mesh2) 
+          DIC.ZANB.mesh1, DIC.ZANB.mesh2)
 
 waic <- c(Pois.mesh1$waic$waic, Pois.mesh2$waic$waic,
           Pois.olre.mesh1$waic$waic, Pois.olre.mesh2$waic$waic,
@@ -2060,19 +2059,19 @@ waic <- c(Pois.mesh1$waic$waic, Pois.mesh2$waic$waic,
           WAIC.ZANB.mesh1, WAIC.ZANB.mesh2)
 
 Z.out     <- cbind(dic, waic)
-rownames(Z.out) <- c("Spatial Poisson GLM mesh 1",  
+rownames(Z.out) <- c("Spatial Poisson GLM mesh 1",
                      "Spatial Poisson GLM mesh 2",
-                     "Spatial Poisson GLM mesh 1 + olre",  
+                     "Spatial Poisson GLM mesh 1 + olre",
                      "Spatial Poisson GLM mesh 2 + olre",
-                     "Spatial NB GLM mesh 1",  
+                     "Spatial NB GLM mesh 1",
                      "Spatial NB GLM mesh 2",
-                     "Spatial ZAP model mesh 1",  
+                     "Spatial ZAP model mesh 1",
                      "Spatial ZAP model mesh 2",
-                     "Spatial ZANB model mesh 1",  
+                     "Spatial ZANB model mesh 1",
                      "Spatial ZANB model mesh 2")
 Z.out
 
-# looks like the spatial ZAP model with mesh 2 is a clear standout butttt, 
+# looks like the spatial ZAP model with mesh 2 is a clear standout butttt,
 # when plotting the mesh, it looks BAAAAAAAD! Lets go with ZANB with mesh2 :)))))
 
 MyData <- data.frame(
@@ -2086,7 +2085,7 @@ MyData <- data.frame(
               ZAP.mesh2$summary.hyper[c(1,3),"mean"],
               ZANB.mesh1$summary.hyper[c(3,5),"mean"],
               ZANB.mesh2$summary.hyper[c(3,5),"mean"]) / 1000,
-   
+
    sigma_u = c(Pois.mesh1$summary.hyper[2,"mean"],
                Pois.mesh2$summary.hyper[2,"mean"],
                Pois.olre.mesh1$summary.hyper[2,"mean"],
@@ -2100,24 +2099,24 @@ MyData <- data.frame(
 
 
 colnames(MyData) <- c("Range of mesh", "sigma u")
-rownames(MyData) <- c("Spatial Poisson GLM mesh 1", 
+rownames(MyData) <- c("Spatial Poisson GLM mesh 1",
                       "Spatial Poisson GLM mesh 2",
-                      "Spatial Poisson GLM mesh 1 + olre", 
-                      "Spatial Poisson GLM mesh 2 + olre", 
+                      "Spatial Poisson GLM mesh 1 + olre",
+                      "Spatial Poisson GLM mesh 2 + olre",
                       "Spatial NB GLM mesh 1",
                       "Spatial NB GLM mesh 2",
-                      "Spatial ZAP model mesh 1, count part", 
+                      "Spatial ZAP model mesh 1, count part",
                       "Spatial ZAP model mesh 1, binary part",
-                      "Spatial ZAP model mesh 2, count part", 
+                      "Spatial ZAP model mesh 2, count part",
                       "Spatial ZAP model mesh 2, binary part",
-                      "Spatial ZANB model mesh 1, count part", 
+                      "Spatial ZANB model mesh 1, count part",
                       "Spatial ZANB model mesh 1, binary part",
-                      "Spatial ZANB model mesh 2, count part", 
+                      "Spatial ZANB model mesh 2, count part",
                       "Spatial ZANB model mesh 2, binary part")
 print(MyData, digits = 5)
 
 
-############ Checking variograms of all models ########## 
+############ Checking variograms of all models ##########
 # Get Pearson residuals for some of the models.
 EPoi.glm <- (SA$vec_abund - muPoi) / sqrt(muPoi)
 ESpatPois <- (SA$vec_abund - mu.SpatPois) / sqrt(mu.SpatPois)
@@ -2125,11 +2124,11 @@ ENB   <- (SA$vec_abund - mu.NB) / sqrt(mu.NB + mu.NB^2 / NB.mesh1$summary.hyper[
 
 # Let's make a variogram of the Pearson residuals.
 mydata <- data.frame(EPoi.glm = EPoi.glm,
-                     EZAP = EZAP, 
+                     EZAP = EZAP,
                      EZANB = EZANB,
                      ESpatPois = ESpatPois,
                      ENB = ENB,
-                     Ykm = SA$Ykm, 
+                     Ykm = SA$Ykm,
                      Xkm = SA$Xkm)
 coordinates(mydata)  <- c("Xkm", "Ykm")
 
@@ -2139,9 +2138,9 @@ Vario.NB   <- variogram(ENB ~ 1, mydata, cutoff = 300, cressie = TRUE)
 Vario.ZAP  <- variogram(EZAP ~ 1, mydata, cutoff = 300, cressie = TRUE)
 Vario.ZANB <- variogram(EZANB ~ 1, mydata, cutoff = 300, cressie = TRUE)
 
-AllVarios <- data.frame(Gamma = c(#GLM.Poi$gamma, 
+AllVarios <- data.frame(Gamma = c(#GLM.Poi$gamma,
                                   Vario.pois$gamma, Vario.NB$gamma, Vario.ZAP$gamma, Vario.ZANB$gamma),
-                        Dist  = c(#GLM.Poi$dist, 
+                        Dist  = c(#GLM.Poi$dist,
                                   Vario.pois$dist, Vario.NB$dist, Vario.ZAP$dist, Vario.ZANB$dist),
                         ID    = factor(rep(c(
                           #"Poisson GLM",
@@ -2153,15 +2152,15 @@ AllVarios <- data.frame(Gamma = c(#GLM.Poi$gamma,
 p1 <- ggplot()
 p1 <- p1 + xlab("Distance") + ylab("Sample-variogram")
 p1 <- p1 + theme(text = element_text(size = 15))
-p1 <- p1 + geom_point(data = AllVarios, 
+p1 <- p1 + geom_point(data = AllVarios,
                       aes(x = Dist, y = Gamma))
-p1 <- p1 + geom_smooth(data = AllVarios, 
+p1 <- p1 + geom_smooth(data = AllVarios,
                        aes(x = Dist, y = Gamma))
 p1 <- p1 + facet_wrap(~ ID)
 p1
 
 
-############ Model validation of ZANB model ########## 
+############ Model validation of ZANB model ##########
 # Getting fitted values and Pearson residuals
 # Fitted values of the ZANB, mesh 1
 RowsPos <- inla.stack.index(Stack.ZA.mesh1, tag='FitPos')$data
@@ -2178,8 +2177,8 @@ X01  <- as.matrix(X01)
 
 A1.m <- as.matrix(A1)
 A2.m <- as.matrix(A2)
-wPos   <- ZANB.mesh1$summary.random$wpos$mean 
-w01    <- ZANB.mesh1$summary.random$w01$mean 
+wPos   <- ZANB.mesh1$summary.random$wpos$mean
+w01    <- ZANB.mesh1$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A1.m %*% wPos)
 P0 <- (k / (mu + k))^k
@@ -2205,7 +2204,7 @@ plot(x  = muZANB,
 
 # Simulation study ZANB model with spatial correlation
 ZANB.mesh2.sim <- inla(fZA.mesh2,
-                       family = c("zeroinflatednbinomial0", "binomial"),  
+                       family = c("zeroinflatednbinomial0", "binomial"),
                        control.family = list(list(hyper = HyperZap),
                                              list()),
                        data = inla.stack.data(Stack.ZA.mesh2),
@@ -2258,14 +2257,14 @@ for (i in 1:NSim) {
   wPos <- SimData[[i]]$latent[RowNum.wPos]
   w01 <- SimData[[i]]$latent[RowNum.w01]
   k   <- SimData[[i]]$hyperpar[1]
-  
+
   mu <- exp(Xpos %*% BetaPos + A2.m %*% wPos)
   Pi <- exp(X01 %*% Beta01 + A2.m %*% w01) / (1 + exp(X01 %*% Beta01 + A2.m %*% w01))
-  
+
   # Generate the values using the VGAM function
-  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)  
+  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)
   ZerosZANBSpat[i] <- sum(YNBSpat[, i] == 0)
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -2273,15 +2272,15 @@ for (i in 1:NSim) {
 close(pb)
 
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZANBSpat), 
+plot(table(ZerosZANBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 2000),
      main = "Simulation results")
-points(x = sum(SA$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(SA$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(SA$vec_abund == 0) > ZerosZANBSpat) / 10000
@@ -2318,8 +2317,8 @@ plot(residuals_sim)
 hist(residuals_sim$scaledResiduals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR = SA$eqr, 
-                         Agriculture = SA$agriculture, 
+predictors <- data.frame(EQR = SA$eqr,
+                         Agriculture = SA$agriculture,
                          Artificial = SA$artificial,
                          Natural = SA$natural,
                          Precipitation = SA$ppt,
@@ -2352,84 +2351,84 @@ plot(EZANB ~ eqr,
      xlab = "EQR",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ agriculture,
      xlab = "Agricultural coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ artificial,
      xlab = "Artificial coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ natural,
      xlab = "Natural & forested coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ ppt,
      xlab = "Precipitation",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ tmax,
      xlab = "Maximum temperatures",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ ws,
      xlab = "Wind speed",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 # Fit a smoother on the residuals and see whether it tells us something.
 library(mgcv)
 par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
-T1 <- gam(EZANB ~ s(eqr), 
+T1 <- gam(EZANB ~ s(eqr),
           data = SA)
 summary(T1)
 plot(T1)
 #That is not really convincing.
 
-T2 <- gam(EZANB ~ s(agriculture), 
+T2 <- gam(EZANB ~ s(agriculture),
           data = SA)
 summary(T2)
 plot(T2)
 #That is not really convincing.
 
-T3 <- gam(EZANB ~ s(artificial), 
+T3 <- gam(EZANB ~ s(artificial),
           data = SA)
 summary(T3)
 plot(T3)
 #That is not really convincing.
 
-T4 <- gam(EZANB ~ s(natural), 
+T4 <- gam(EZANB ~ s(natural),
           data = SA)
 summary(T4)
 plot(T4)
 #That is interesting.
 
-T5 <- gam(EZANB ~ s(ppt), 
+T5 <- gam(EZANB ~ s(ppt),
           data = SA)
 summary(T5)
 plot(T5)
 #That is not really convincing.
 
-T6 <- gam(EZANB ~ s(tmax), 
+T6 <- gam(EZANB ~ s(tmax),
           data = SA)
 summary(T6)
 plot(T6)
 #That is interesting.
 
-T7 <- gam(EZANB ~ s(ws), 
+T7 <- gam(EZANB ~ s(ws),
           data = SA)
 summary(T7)
 plot(T7)
@@ -2437,56 +2436,56 @@ plot(T7)
 
 # Plot residuals vs each covariate not in the model.
 par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
-boxplot(EZANB ~ fyear, 
+boxplot(EZANB ~ fyear,
         xlab = "Year",
         ylab = "Pearson residuals",
         data = SA)
-abline(h = 0, lty = 2)     
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ fmonth,
      xlab = "Month",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ water,
      xlab = "Water coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ wetland,
      xlab = "Wetland coverage",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ q,
      xlab = "Discharge",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)  
+abline(h = 0, lty = 2)
 
 plot(EZANB ~ tmin,
      xlab = "Minimum temperatures",
      ylab = "Pearson residuals",
      data = SA)
-abline(h = 0, lty = 2)   
+abline(h = 0, lty = 2)
 
 # Fit a smoother on the residuals and see whether it tells us something.
-T1 <- gam(EZANB ~ s(water), 
+T1 <- gam(EZANB ~ s(water),
           data = SA)
 summary(T1)
 plot(T1)
 #That is not really convincing.
 
-T2 <- gam(EZANB ~ s(q), 
+T2 <- gam(EZANB ~ s(q),
           data = SA)
 summary(T2)
 plot(T2)
 #That is interesting.
 
-T3 <- gam(EZANB ~ s(tmin), 
+T3 <- gam(EZANB ~ s(tmin),
           data = SA)
 summary(T3)
 plot(T3)
@@ -2504,10 +2503,10 @@ par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
 mydata <- data.frame(EZANB, SA$Ykm, SA$Xkm)
 coordinates(mydata)    <- c("SA.Ykm", "SA.Xkm")
 Vario.ZANB <- variogram(EZANB ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario.ZANB, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario.ZANB,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Is this a horizontal band of points? Kinda!
 
@@ -2517,49 +2516,49 @@ par(mfrow = c(1,1), mar= c(5,5,2,2), cex.lab = 1.5)
 mydata <- data.frame(residuals_sim$scaledResiduals, SA$Ykm, SA$Xkm)
 coordinates(mydata)    <- c("SA.Ykm", "SA.Xkm")
 Vario.ZANB <- variogram(residuals_sim$scaledResiduals ~ 1, mydata, cutoff = 150, cressie = TRUE)
-plot(Vario.ZANB, 
-     main = "", 
-     xlab = list(label = "Distance (km)", cex = 1.5), 
-     ylab = list(label = "Semi-variogram", cex = 1.5), 
+plot(Vario.ZANB,
+     main = "",
+     xlab = list(label = "Distance (km)", cex = 1.5),
+     ylab = list(label = "Semi-variogram", cex = 1.5),
      pch = 16, col = 1, cex = 1.4)
 # Is this a horizontal band of points? YESSSSS :D!
 
-############ Model selection of ZANB model ########## 
+############ Model selection of ZANB model ##########
 ###### Optimal random structure #####
-fZA.mesh1.A  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + artificial.pos + natural.pos + 
-  ppt.pos + tmax.pos + ws.pos + 
+fZA.mesh1.A  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos + artificial.pos + natural.pos +
+  ppt.pos + tmax.pos + ws.pos +
   # f(wpos, model = spde1) +
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + artificial.01 + natural.01 + 
-  ppt.01 + tmax.01 + ws.01 + 
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 + artificial.01 + natural.01 +
+  ppt.01 + tmax.01 + ws.01 +
   f(w01, model = spde1)
 
-fZA.mesh1.B  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + artificial.pos + natural.pos + 
-  ppt.pos + tmax.pos + ws.pos + 
+fZA.mesh1.B  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos + artificial.pos + natural.pos +
+  ppt.pos + tmax.pos + ws.pos +
   f(wpos, model = spde1) +
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + artificial.01 + natural.01 + 
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 + artificial.01 + natural.01 +
   ppt.01 + tmax.01 + ws.01
   #  + f(w01, model = spde1)
 
 
-fZA.mesh1.C  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + artificial.pos + natural.pos + 
-  ppt.pos + tmax.pos + ws.pos + 
+fZA.mesh1.C  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos + artificial.pos + natural.pos +
+  ppt.pos + tmax.pos + ws.pos +
   # f(wpos, model = spde1) +
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + artificial.01 + natural.01 + 
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 + artificial.01 + natural.01 +
   ppt.01 + tmax.01 + ws.01
   #  + f(w01, model = spde1)
 
@@ -2634,324 +2633,324 @@ HyperZap <- list(theta = list(initial = -10, fixed = TRUE),
 # Round 1: dropped one variable from each model
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # artifical from count part
-fZA.mesh1.3  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.3  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
   tmax.pos +
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   agriculture.01 +
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from count part
-fZA.mesh1.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from binary part
-fZA.mesh1.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # artificial from binary part
-fZA.mesh1.10  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.10  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  ppt.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from binary part
-fZA.mesh1.13  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.13  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from binary part
-fZA.mesh1.14  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  artificial.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.14  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  artificial.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -2962,7 +2961,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -2973,7 +2972,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -2984,7 +2983,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.3 <- inla(fZA.mesh1.3,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -2995,7 +2994,7 @@ ZANB.mesh1.3 <- inla(fZA.mesh1.3,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -3006,7 +3005,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -3017,7 +3016,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -3028,7 +3027,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
 
 
 ZANB.mesh1.7 <- inla(fZA.mesh1.7,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -3039,7 +3038,7 @@ ZANB.mesh1.7 <- inla(fZA.mesh1.7,
 
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -3049,7 +3048,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                      A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.9 <- inla(fZA.mesh1.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3059,7 +3058,7 @@ ZANB.mesh1.9 <- inla(fZA.mesh1.9,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.10 <- inla(fZA.mesh1.10,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3069,7 +3068,7 @@ ZANB.mesh1.10 <- inla(fZA.mesh1.10,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3079,7 +3078,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3089,7 +3088,7 @@ ZANB.mesh1.12 <- inla(fZA.mesh1.12,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.13 <- inla(fZA.mesh1.13,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3099,7 +3098,7 @@ ZANB.mesh1.13 <- inla(fZA.mesh1.13,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.14 <- inla(fZA.mesh1.14,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -3127,23 +3126,23 @@ DIC.ZANB.mesh1.14 = sum(tapply(ZANB.mesh1.14$dic$local.dic, ZANB.mesh1.14$dic$fa
 
 
 Z <- matrix(nrow = 15, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.3, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.7, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.9, DIC.ZANB.mesh1.10, DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12,
            DIC.ZANB.mesh1.13, DIC.ZANB.mesh1.14)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "artificial count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
                  "ws count part",
-                 "eqr binary part", 
-                 "agriculture binary part", 
+                 "eqr binary part",
+                 "agriculture binary part",
                  "artificial binary part",
                  "natural binary part",
                  "ppt binary part",
@@ -3170,293 +3169,293 @@ min(Z)
 # ws binary part          8312.220
 
 
-#### Round 2 #### 
+#### Round 2 ####
 # Round 2: dropped artificial from count part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   agriculture.01 +
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from count part
-fZA.mesh1.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from binary part
-fZA.mesh1.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # artificial from binary part
-fZA.mesh1.10  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.10  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  ppt.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from binary part
-fZA.mesh1.13  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.13  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from binary part
-fZA.mesh1.14  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.14  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -3467,7 +3466,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3478,7 +3477,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3489,7 +3488,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3500,7 +3499,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3511,7 +3510,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3522,7 +3521,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
 
 
 ZANB.mesh1.7 <- inla(fZA.mesh1.7,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3533,7 +3532,7 @@ ZANB.mesh1.7 <- inla(fZA.mesh1.7,
 
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3543,7 +3542,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.9 <- inla(fZA.mesh1.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3553,7 +3552,7 @@ ZANB.mesh1.9 <- inla(fZA.mesh1.9,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.10 <- inla(fZA.mesh1.10,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -3563,7 +3562,7 @@ ZANB.mesh1.10 <- inla(fZA.mesh1.10,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -3573,7 +3572,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -3583,7 +3582,7 @@ ZANB.mesh1.12 <- inla(fZA.mesh1.12,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.13 <- inla(fZA.mesh1.13,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -3593,7 +3592,7 @@ ZANB.mesh1.13 <- inla(fZA.mesh1.13,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.14 <- inla(fZA.mesh1.14,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -3620,22 +3619,22 @@ DIC.ZANB.mesh1.14 = sum(tapply(ZANB.mesh1.14$dic$local.dic, ZANB.mesh1.14$dic$fa
 
 
 Z <- matrix(nrow = 14, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.7, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.9, DIC.ZANB.mesh1.10, DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12,
            DIC.ZANB.mesh1.13, DIC.ZANB.mesh1.14)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
                  "ws count part",
-                 "eqr binary part", 
-                 "agriculture binary part", 
+                 "eqr binary part",
+                 "agriculture binary part",
                  "artificial binary part",
                  "natural binary part",
                  "ppt binary part",
@@ -3660,260 +3659,260 @@ min(Z)
 # tmax binary part        8361.204 <----- drop
 # ws binary part          8361.709
 
-#### Round 2.1 #### 
+#### Round 2.1 ####
 # Round 2.1: dropped artificial from binary part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   agriculture.01 +
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from count part
-fZA.mesh1.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  tmax.01 + 
-  ws.01 + 
+fZA.mesh1.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  tmax.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from binary part
-fZA.mesh1.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  ppt.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  ppt.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
   tmax.01 +
-  ws.01 + 
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from binary part
-fZA.mesh1.13  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.13  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from binary part
-fZA.mesh1.14  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.14  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   tmax.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -3924,7 +3923,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3935,7 +3934,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3946,7 +3945,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3957,7 +3956,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3968,7 +3967,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3979,7 +3978,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
 
 
 ZANB.mesh1.7 <- inla(fZA.mesh1.7,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -3990,7 +3989,7 @@ ZANB.mesh1.7 <- inla(fZA.mesh1.7,
 
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4000,7 +3999,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.9 <- inla(fZA.mesh1.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4010,7 +4009,7 @@ ZANB.mesh1.9 <- inla(fZA.mesh1.9,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4020,7 +4019,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4030,7 +4029,7 @@ ZANB.mesh1.12 <- inla(fZA.mesh1.12,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.13 <- inla(fZA.mesh1.13,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4040,7 +4039,7 @@ ZANB.mesh1.13 <- inla(fZA.mesh1.13,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.14 <- inla(fZA.mesh1.14,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4066,22 +4065,22 @@ DIC.ZANB.mesh1.14 = sum(tapply(ZANB.mesh1.14$dic$local.dic, ZANB.mesh1.14$dic$fa
 
 
 Z <- matrix(nrow = 13, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.7, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.9, DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12,
            DIC.ZANB.mesh1.13, DIC.ZANB.mesh1.14)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
                  "ws count part",
-                 "eqr binary part", 
-                 "agriculture binary part", 
+                 "eqr binary part",
+                 "agriculture binary part",
                  "natural binary part",
                  "ppt binary part",
                  "tmax binary part",
@@ -4089,260 +4088,260 @@ rownames(Z) <- c("Full model",
 Z
 min(Z)
 
-#### Round 3 #### 
+#### Round 3 ####
 # Round 3: dropped tmax binary part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   agriculture.01 +
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from count part
-fZA.mesh1.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from binary part
-fZA.mesh1.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # artificial from binary part
-fZA.mesh1.10  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.10  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ws.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from binary part
-fZA.mesh1.14  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  artificial.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.14  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  artificial.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -4353,7 +4352,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4364,7 +4363,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4375,7 +4374,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4386,7 +4385,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4397,7 +4396,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4408,7 +4407,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
 
 
 ZANB.mesh1.7 <- inla(fZA.mesh1.7,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4419,7 +4418,7 @@ ZANB.mesh1.7 <- inla(fZA.mesh1.7,
 
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4429,7 +4428,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.9 <- inla(fZA.mesh1.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4439,7 +4438,7 @@ ZANB.mesh1.9 <- inla(fZA.mesh1.9,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.10 <- inla(fZA.mesh1.10,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4449,7 +4448,7 @@ ZANB.mesh1.10 <- inla(fZA.mesh1.10,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4459,7 +4458,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4469,7 +4468,7 @@ ZANB.mesh1.12 <- inla(fZA.mesh1.12,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.14 <- inla(fZA.mesh1.14,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4495,22 +4494,22 @@ DIC.ZANB.mesh1.14 = sum(tapply(ZANB.mesh1.14$dic$local.dic, ZANB.mesh1.14$dic$fa
 
 
 Z <- matrix(nrow = 13, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.7, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.9, DIC.ZANB.mesh1.10, DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12,
            DIC.ZANB.mesh1.14)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
                  "ws count part",
-                 "eqr binary part", 
-                 "agriculture binary part", 
+                 "eqr binary part",
+                 "agriculture binary part",
                  "artificial binary part",
                  "natural binary part",
                  "ppt binary part",
@@ -4533,229 +4532,229 @@ min(Z)
 # ppt binary part         8360.154
 # ws binary part          8361.727
 
-#### Round 4 #### 
+#### Round 4 ####
 # Round 4: dropped artificial from bianry part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   agriculture.01 +
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from count part
-fZA.mesh1.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # agriculture from binary part
-fZA.mesh1.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  ppt.01 + 
-  ws.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  ppt.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ws.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ws.01 +
   f(w01, model = spde1)
 
 # ws from binary part
-fZA.mesh1.14  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.14  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -4766,7 +4765,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4777,7 +4776,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4788,7 +4787,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4799,7 +4798,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4810,7 +4809,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4821,7 +4820,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
 
 
 ZANB.mesh1.7 <- inla(fZA.mesh1.7,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4832,7 +4831,7 @@ ZANB.mesh1.7 <- inla(fZA.mesh1.7,
 
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4842,7 +4841,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.9 <- inla(fZA.mesh1.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -4852,7 +4851,7 @@ ZANB.mesh1.9 <- inla(fZA.mesh1.9,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4862,7 +4861,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4872,7 +4871,7 @@ ZANB.mesh1.12 <- inla(fZA.mesh1.12,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.14 <- inla(fZA.mesh1.14,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -4897,22 +4896,22 @@ DIC.ZANB.mesh1.14 = sum(tapply(ZANB.mesh1.14$dic$local.dic, ZANB.mesh1.14$dic$fa
 
 
 Z <- matrix(nrow = 12, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.7, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.9, DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12,
            DIC.ZANB.mesh1.14)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
                  "ws count part",
-                 "eqr binary part", 
-                 "agriculture binary part", 
+                 "eqr binary part",
+                 "agriculture binary part",
                  "natural binary part",
                  "ppt binary part",
                  "ws binary part")
@@ -4933,200 +4932,200 @@ min(Z)
 # ppt binary part         8359.100
 # ws binary part          8358.520 <----- drop
 
-#### Round 5 #### 
+#### Round 5 ####
 # Round 5: dropped ws binary part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   agriculture.01 +
-  natural.01 + 
-  ppt.01 + 
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ws from count part
-fZA.mesh1.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  agriculture.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  agriculture.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # agriculture from binary part
-fZA.mesh1.9  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.9  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  ppt.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  agriculture.01 + 
-  natural.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  agriculture.01 +
+  natural.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -5137,7 +5136,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5148,7 +5147,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5159,7 +5158,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5170,7 +5169,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5181,7 +5180,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5192,7 +5191,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
 
 
 ZANB.mesh1.7 <- inla(fZA.mesh1.7,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5203,7 +5202,7 @@ ZANB.mesh1.7 <- inla(fZA.mesh1.7,
 
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5213,7 +5212,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.9 <- inla(fZA.mesh1.9,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5223,7 +5222,7 @@ ZANB.mesh1.9 <- inla(fZA.mesh1.9,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -5233,7 +5232,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -5256,21 +5255,21 @@ DIC.ZANB.mesh1.11 = sum(tapply(ZANB.mesh1.11$dic$local.dic, ZANB.mesh1.11$dic$fa
 DIC.ZANB.mesh1.12 = sum(tapply(ZANB.mesh1.12$dic$local.dic, ZANB.mesh1.12$dic$family, sum))
 
 Z <- matrix(nrow = 11, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.7, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.9, DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
                  "ws count part",
-                 "eqr binary part", 
-                 "agriculture binary part", 
+                 "eqr binary part",
+                 "agriculture binary part",
                  "natural binary part",
                  "ppt binary part")
 Z
@@ -5289,173 +5288,173 @@ min(Z)
 # natural binary part     8358.729
 # ppt binary part         8357.554
 
-#### Round 6 #### 
+#### Round 6 ####
 # Round 6: dropped agriculture binary part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ws from count part
-fZA.mesh1.7  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.7  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  ws.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  ws.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -5466,7 +5465,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5477,7 +5476,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5488,7 +5487,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5499,7 +5498,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5510,7 +5509,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5521,7 +5520,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
 
 
 ZANB.mesh1.7 <- inla(fZA.mesh1.7,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5532,7 +5531,7 @@ ZANB.mesh1.7 <- inla(fZA.mesh1.7,
 
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5542,7 +5541,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -5552,7 +5551,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -5574,20 +5573,20 @@ DIC.ZANB.mesh1.11 = sum(tapply(ZANB.mesh1.11$dic$local.dic, ZANB.mesh1.11$dic$fa
 DIC.ZANB.mesh1.12 = sum(tapply(ZANB.mesh1.12$dic$local.dic, ZANB.mesh1.12$dic$family, sum))
 
 Z <- matrix(nrow = 10, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.7, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
                  "ws count part",
-                 "eqr binary part", 
+                 "eqr binary part",
                  "natural binary part",
                  "ppt binary part")
 Z
@@ -5605,148 +5604,148 @@ min(Z)
 # natural binary part     8357.621
 # ppt binary part         8356.795
 
-#### Round 7 #### 
+#### Round 7 ####
 # Round 7: dropped agriculture binary part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  natural.01 + 
-  ppt.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  natural.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # natural from binary part
-fZA.mesh1.11  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh1.11  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  natural.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  natural.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -5757,7 +5756,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5768,7 +5767,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5779,7 +5778,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5790,7 +5789,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5801,7 +5800,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5811,7 +5810,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -5821,7 +5820,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.11 <- inla(fZA.mesh1.11,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -5831,7 +5830,7 @@ ZANB.mesh1.11 <- inla(fZA.mesh1.11,
                         A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -5852,19 +5851,19 @@ DIC.ZANB.mesh1.11 = sum(tapply(ZANB.mesh1.11$dic$local.dic, ZANB.mesh1.11$dic$fa
 DIC.ZANB.mesh1.12 = sum(tapply(ZANB.mesh1.12$dic$local.dic, ZANB.mesh1.12$dic$family, sum))
 
 Z <- matrix(nrow = 9, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.11, DIC.ZANB.mesh1.12)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
-                 "eqr binary part", 
+                 "eqr binary part",
                  "natural binary part",
                  "ppt binary part")
 Z
@@ -5881,125 +5880,125 @@ min(Z)
 # natural binary part    8356.685 <----- drop
 # ppt binary part        8356.703
 
-#### Round 8 #### 
+#### Round 8 ####
 # Round 8: dropped natural binary part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
-  ppt.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  ppt.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  ppt.01 +
   f(w01, model = spde1)
 
 # ppt from binary part
-fZA.mesh1.12  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.12  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -6010,7 +6009,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6021,7 +6020,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6032,7 +6031,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6043,7 +6042,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6054,7 +6053,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6064,7 +6063,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6074,7 +6073,7 @@ ZANB.mesh1.8 <- inla(fZA.mesh1.8,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.12 <- inla(fZA.mesh1.12,
-                      family = c("zeroinflatednbinomial0", "binomial"),  
+                      family = c("zeroinflatednbinomial0", "binomial"),
                       control.family = list(list(hyper = HyperZap),
                                             list()),
                       data = inla.stack.data(Stack.ZA.mesh1),
@@ -6094,19 +6093,19 @@ DIC.ZANB.mesh1.8 = sum(tapply(ZANB.mesh1.8$dic$local.dic, ZANB.mesh1.8$dic$famil
 DIC.ZANB.mesh1.12 = sum(tapply(ZANB.mesh1.12$dic$local.dic, ZANB.mesh1.12$dic$family, sum))
 
 Z <- matrix(nrow = 8, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.8,
            DIC.ZANB.mesh1.12)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
-                 "eqr binary part", 
+                 "eqr binary part",
                  "ppt binary part")
 Z
 min(Z)
@@ -6121,104 +6120,104 @@ min(Z)
 # eqr binary part        8474.794
 # ppt binary part        8354.850 <----- drop
 
-#### Round 9 #### 
+#### Round 9 ####
 # Round 9: dropped ppt binary part
 #	Specify the model formula
 # full model
-fZA.mesh1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde1)
 
 # eqr from count part
-fZA.mesh1.1  <- AllY ~ -1 + 
-  Intercept.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.1  <- AllY ~ -1 +
+  Intercept.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde1)
 
 # agriculture from count part
-fZA.mesh1.2  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.2  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde1)
 
 # natural from count part
-fZA.mesh1.4  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.4  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde1)
 
 # ppt from count part
-fZA.mesh1.5  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
+fZA.mesh1.5  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
   tmax.pos +
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde1)
 
 # tmax from count part
-fZA.mesh1.6  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
-  eqr.01 + 
+fZA.mesh1.6  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
+  eqr.01 +
   f(w01, model = spde1)
 
 # eqr from binary part
-fZA.mesh1.8  <- AllY ~ -1 + 
-  Intercept.pos + 
-  eqr.pos + 
-  agriculture.pos + 
-  natural.pos + 
-  ppt.pos + 
-  tmax.pos + 
-  f(wpos, model = spde1) + 
-  
-  Intercept.01 + 
+fZA.mesh1.8  <- AllY ~ -1 +
+  Intercept.pos +
+  eqr.pos +
+  agriculture.pos +
+  natural.pos +
+  ppt.pos +
+  tmax.pos +
+  f(wpos, model = spde1) +
+
+  Intercept.01 +
   f(w01, model = spde1)
 
 # fit the models
 ZANB.mesh1 <- inla(fZA.mesh1,
-                   family = c("zeroinflatednbinomial0", "binomial"),  
+                   family = c("zeroinflatednbinomial0", "binomial"),
                    control.family = list(list(hyper = HyperZap),
                                          list()),
                    data = inla.stack.data(Stack.ZA.mesh1),
@@ -6229,7 +6228,7 @@ ZANB.mesh1 <- inla(fZA.mesh1,
 
 
 ZANB.mesh1.1 <- inla(fZA.mesh1.1,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6240,7 +6239,7 @@ ZANB.mesh1.1 <- inla(fZA.mesh1.1,
 
 
 ZANB.mesh1.2 <- inla(fZA.mesh1.2,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6251,7 +6250,7 @@ ZANB.mesh1.2 <- inla(fZA.mesh1.2,
 
 
 ZANB.mesh1.4 <- inla(fZA.mesh1.4,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6262,7 +6261,7 @@ ZANB.mesh1.4 <- inla(fZA.mesh1.4,
 
 
 ZANB.mesh1.5 <- inla(fZA.mesh1.5,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6273,7 +6272,7 @@ ZANB.mesh1.5 <- inla(fZA.mesh1.5,
 
 
 ZANB.mesh1.6 <- inla(fZA.mesh1.6,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6283,7 +6282,7 @@ ZANB.mesh1.6 <- inla(fZA.mesh1.6,
                        A = inla.stack.A(Stack.ZA.mesh1)))
 
 ZANB.mesh1.8 <- inla(fZA.mesh1.8,
-                     family = c("zeroinflatednbinomial0", "binomial"),  
+                     family = c("zeroinflatednbinomial0", "binomial"),
                      control.family = list(list(hyper = HyperZap),
                                            list()),
                      data = inla.stack.data(Stack.ZA.mesh1),
@@ -6302,14 +6301,14 @@ DIC.ZANB.mesh1.6 = sum(tapply(ZANB.mesh1.6$dic$local.dic, ZANB.mesh1.6$dic$famil
 DIC.ZANB.mesh1.8 = sum(tapply(ZANB.mesh1.8$dic$local.dic, ZANB.mesh1.8$dic$family, sum))
 
 Z <- matrix(nrow = 7, ncol = 1)
-Z[,1] <- c(DIC.ZANB.mesh1, 
+Z[,1] <- c(DIC.ZANB.mesh1,
            DIC.ZANB.mesh1.1, DIC.ZANB.mesh1.2, DIC.ZANB.mesh1.4,
            DIC.ZANB.mesh1.5, DIC.ZANB.mesh1.6, DIC.ZANB.mesh1.8)
 
 colnames(Z) <- c("DIC")
-rownames(Z) <- c("Full model", 
-                 "eqr count part", 
-                 "agriculture count part", 
+rownames(Z) <- c("Full model",
+                 "eqr count part",
+                 "agriculture count part",
                  "natural count part",
                  "ppt count part",
                  "tmax count part",
@@ -6328,7 +6327,7 @@ min(Z)
 
 # we have found our optimal fixed structure :)))
 
-############ Model validation of optimal ZANB model ########## 
+############ Model validation of optimal ZANB model ##########
 # Lets check out the covariates
 summary(ZANB.mesh1)
 ZANB.mesh1$summary.fixed[, c("mean", "0.025quant", "0.975quant")]
@@ -6349,8 +6348,8 @@ X01.1  <- as.matrix(X01[, c(1:3, 5:8)])
 
 A1.m <- as.matrix(A1)
 A2.m <- as.matrix(A2)
-wPos   <- ZANB.mesh1$summary.random$wpos$mean 
-w01    <- ZANB.mesh1$summary.random$w01$mean 
+wPos   <- ZANB.mesh1$summary.random$wpos$mean
+w01    <- ZANB.mesh1$summary.random$w01$mean
 
 mu <- exp(Xpos %*% BetaPos + A1.m %*% wPos)
 P0 <- (k / (mu + k))^k
@@ -6376,7 +6375,7 @@ plot(x  = muZANB,
 
 # Simulation study ZINB model with spatial correlation
 ZANB.mesh1.sim <- inla(fZA.mesh1,
-                       family = c("zeroinflatednbinomial0", "binomial"),  
+                       family = c("zeroinflatednbinomial0", "binomial"),
                        control.family = list(list(hyper = HyperZap),
                                              list()),
                        data = inla.stack.data(Stack.ZA.mesh1),
@@ -6427,14 +6426,14 @@ for (i in 1:NSim) {
   wPos <- SimData[[i]]$latent[RowNum.wPos]
   w01 <- SimData[[i]]$latent[RowNum.w01]
   k   <- SimData[[i]]$hyperpar[1] # strictly speaking, simulated values should be used, but there is a tendency for k parameters to not look very random
-  
+
   mu <- exp(Xpos %*% BetaPos + A1.m %*% wPos)
   Pi <- exp(X01.1 %*% Beta01 + A1.m %*% w01) / (1 + exp(X01.1 %*% Beta01 + A1.m %*% w01))
-  
+
   # Generate the values using the VGAM function
-  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)  
+  YZANBSpat[, i] <- VGAM::rzanegbin(N, munb = mu, size = k, pobs0 = 1 - Pi)
   ZerosZANBSpat[i] <- sum(YNBSpat[, i] == 0)
-  
+
   # Update the progress bar
   setTxtProgressBar(pb, i)
 }
@@ -6443,15 +6442,15 @@ for (i in 1:NSim) {
 close(pb)
 
 par(mar = c(5,5,2,2), cex.lab = 1.5)
-plot(table(ZerosZANBSpat), 
+plot(table(ZerosZANBSpat),
      xlab = "How often do we have 0, 1, 2, 3, etc. number of zeros",
      ylab = "Number of zeros in 10000 simulated data sets",
      xlim = c(0, 2000),
      main = "Simulation results")
-points(x = sum(SA$vec_abund == 0), 
-       y = 0, 
-       pch = 16, 
-       cex = 5, 
+points(x = sum(SA$vec_abund == 0),
+       y = 0,
+       pch = 16,
+       cex = 5,
        col = 2)
 
 sum(sum(SA$vec_abund == 0) > ZerosZANBSpat) / 10000
@@ -6490,8 +6489,8 @@ scaled_residuals <- residuals(residuals_sim)
 hist(scaled_residuals, main = "Histogram of Scaled Residuals", xlab = "Scaled Residuals", breaks = 20, col = "lightblue", border = "white")
 
 # Residuals vs. Predictors
-predictors <- data.frame(EQR = SA$eqr, 
-                         Agriculture = SA$agriculture, 
+predictors <- data.frame(EQR = SA$eqr,
+                         Agriculture = SA$agriculture,
                          Artificial = SA$artificial,
                          Natural = SA$natural,
                          Precipitation = SA$ppt,
@@ -6510,35 +6509,35 @@ for (i in 1:ncol(predictors)) {
 }
 
 # Results of the ZANB model with spatial correlation
-wpm.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$mean  
-wpm.ZANB.01  <- ZANB.mesh1$summary.random$w01$mean  
-wsd.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$sd  
-wsd.ZANB.01  <- ZANB.mesh1$summary.random$w01$sd  
+wpm.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$mean
+wpm.ZANB.01  <- ZANB.mesh1$summary.random$w01$mean
+wsd.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$sd
+wsd.ZANB.01  <- ZANB.mesh1$summary.random$w01$sd
 
 # Plot the spatial random field again, and add white space for the non-study area
 par(mar = c(5,5,2,2), cex.lab = 1.5)
 PlotField(field = wpm.ZANB.Pos, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.Pos, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -6546,39 +6545,39 @@ plot(Lithuania.UTM, add = TRUE)
 # Binary part of the ZANB
 PlotField(field = wpm.ZANB.01, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 PlotField(field = wsd.ZANB.01, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
 
 
 
-############ Extract important data from optimal ZANB model ############ 
+############ Extract important data from optimal ZANB model ############
 #### Plot spatial random field ####
 # Results of the ZANB model with spatial correlation
-wpm.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$mean  
-wpm.ZANB.01  <- ZANB.mesh1$summary.random$w01$mean  
-wsd.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$sd  
-wsd.ZANB.01  <- ZANB.mesh1$summary.random$w01$sd  
+wpm.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$mean
+wpm.ZANB.01  <- ZANB.mesh1$summary.random$w01$mean
+wsd.ZANB.Pos <- ZANB.mesh1$summary.random$wpos$sd
+wsd.ZANB.01  <- ZANB.mesh1$summary.random$w01$sd
 
 # count part of the model
 options(scipen = 999)
@@ -6607,13 +6606,13 @@ dev.off()
 
 PlotField(field = wsd.ZANB.Pos, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -6645,13 +6644,13 @@ dev.off()
 
 PlotField(field = wsd.ZANB.01, mesh = mesh1, xlim = range(mesh1$loc[,1]), ylim = range(mesh1$loc[,2]))
 points(x = Loc[,1],
-       y = Loc[,2], 
-       cex = 0.5, 
-       col = "black", 
+       y = Loc[,2],
+       cex = 0.5,
+       col = "black",
        pch = 16)
 # plot(Water.UTM  , add = TRUE)
-plot(Land1, 
-     col = "white", 
+plot(Land1,
+     col = "white",
      add = TRUE,
      border = "white")
 plot(Lithuania.UTM, add = TRUE)
@@ -6748,7 +6747,7 @@ sigma_u_upper <- ZANB.mesh1$summary.hyperpar[c(4, 6), "0.975quant"]
 
 # Create a data frame for the custom hyperparameters table
 custom_hyper_table <- data.frame(
-  Parameter = c("Range for wpos (km)", "Range for w01 (km)", 
+  Parameter = c("Range for wpos (km)", "Range for w01 (km)",
                 "Stdev for wpos (sigma_u)", "Stdev for w01 (sigma_u)"),
   Mean = c(range_km, sigma_u),
   SD = c(range_sd_km, sigma_u_sd),
@@ -6813,8 +6812,8 @@ save_gt_diagnostic_table(
 
 
 
-####################### Clean Up ####################### 
- 
+####################### Clean Up #######################
+
 library(pacman)
 # Clear data
 rm(list = ls())  # Removes all objects from environment

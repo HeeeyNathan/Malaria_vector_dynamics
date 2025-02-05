@@ -7,17 +7,14 @@ library(sf)
 
 #' Load the dipteran vector data.
 # Import the data
-df <- read.csv("Data/Bio_Env_data_14.1.2025.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE) |> 
-  clean_names() |> 
+df <- read.csv("Data/Bio_Env_data_14.1.2025.csv", h = T, sep = ",", stringsAsFactors = FALSE, check.names = FALSE) |>
+  clean_names() |>
   arrange(desc(waterbody_type), site_id, year) |>  # order the data.frame
   as.data.frame() # Convert tibble to dataframe because some older code does not recognize tibble
 
-# Your API key (replace with your actual key)
-api_key <- "AIzaSyClYan86_4y43ON6djumMthyP-fjm1yeGc"
-
 # create dataframe with unique sites and coordinates
-xy <- df |> 
-  dplyr::select(site_id, latitude, longitude) |> 
+xy <- df |>
+  dplyr::select(site_id, latitude, longitude) |>
   distinct(site_id, .keep_all = TRUE) # Keeps the first occurrence of each site_id
 
 # Split the dataset into batches (e.g., 50 coordinates per batch)
@@ -47,7 +44,7 @@ elevation_data <- bind_rows(
 xy$elevation <- elevation_data$elevation
 
 # rename columns for ease
-xy <- xy |> 
+xy <- xy |>
   rename(
     x = longitude,
     y = latitude,
@@ -58,10 +55,10 @@ lithuania.shp <- geoboundaries("Lithuania")
 lithuania <- st_transform(Lithuania.shp, crs = 4326)
 
 # Plot the map
-plot(st_geometry(lithuania), 
-     col = "white", 
-     border = "black", 
-     xlim = c(21, 27), 
+plot(st_geometry(lithuania),
+     col = "white",
+     border = "black",
+     xlim = c(21, 27),
      ylim = c(53, 57),
      main = "Lithuania Map with Points")
 # Overlay points on the map
@@ -99,10 +96,10 @@ interp_sf <- st_as_sf(interp_df, coords = c("x", "y"), crs = st_crs(lithuania))
 interp_clipped <- st_intersection(st_as_sf(interp_df, coords = c("x", "y"), crs = st_crs(lithuania)), lithuania)
 
 # Extract coordinates and elevation for raster plotting
-interp_clipped_df <- interp_clipped |> 
-  st_as_sf() |> 
-  st_coordinates() |> 
-  as.data.frame() |> 
+interp_clipped_df <- interp_clipped |>
+  st_as_sf() |>
+  st_coordinates() |>
+  as.data.frame() |>
   cbind(elevation = interp_clipped$elevation)
 
 ggplot() +
@@ -120,7 +117,7 @@ ggplot() +
 
 # Join elevation data to main dataset
 df <- df |>
-  left_join(xy, by = "site_id") |> 
+  left_join(xy, by = "site_id") |>
   dplyr::select(-x, -y)
 
 # save output
