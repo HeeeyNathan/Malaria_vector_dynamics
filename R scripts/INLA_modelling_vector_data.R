@@ -314,12 +314,12 @@ df <- read.csv("Data/Bio_Env_data_15.1.2025.csv", h = T, sep = ",", stringsAsFac
                                                    ordered = T), # make waterbody_type a factor
          date             = as.Date(date, format = "%Y-%m-%d"), # make the dates dates
          doy              = yday(date)) |> # calculate sampling day of year (doy)
-  rename(agriculture      = agricultural_areas,
+  dplyr::rename(agriculture      = agricultural_areas,
          artificial       = artificial_surfaces,
          natural          = forest_and_semi_natural_areas,
          water            = water_bodies,
          wetlands         = wetlands) |>
-  select(-c(observation_period, sampling_events)) |> # removes unnecessary columns
+  dplyr::select(-c(observation_period, sampling_events)) |> # removes unnecessary columns
   arrange(desc(waterbody_type), site_id, year) |>  # order the data.frame
   as.data.frame() # Convert tibble to dataframe because some older code does not recognize tibble
 
@@ -375,18 +375,6 @@ MyControlPredictor  <- list(compute = TRUE, #' Calculate fitted values
                             link = 1)       #' Predict on the scale of
                                             #' the response variable.
 
-#' Define the penalised complexity prior for the RW2 smoother.
-U <- 1
-MyPCPrior <- list(theta = list(prior = "pc.prec",
-                               param = c(U, 0.01)))
-
-
-#' To avoid a potential INLA error message, execute:
-m <- get("inla.models", inla.get.inlaEnv())
-m$latent$rw2$min.diff = NULL
-assign("inla.models", m, inla.get.inlaEnv())
-
-
 # Section 4: House keeping----
 
 #* Subsection 4.1: Number of observations by site and year----
@@ -441,7 +429,7 @@ df <- df |>
 
 # Remove columns containing NA values
 df <- df |>
-  select(where(~ all(!is.na(.))))
+  dplyr::select(where(~ all(!is.na(.))))
 
 #* Subsection 4.3: Check values after cleaning----
 
@@ -495,7 +483,7 @@ df |>
           combo = wrap("facethist", binwidth = 5))) + My_theme
 
 df |>
-  select(all_of(MyVar)) |>
+  dplyr::select(all_of(MyVar)) |>
   corvif()
 
 # Perhaps tmax and q can cause some trouble. Let's remove them and see
@@ -510,7 +498,7 @@ df |>
           combo = wrap("facethist", binwidth = 5))) + My_theme
 
 df |>
-  select(all_of(MyVar_red)) |>
+  dplyr::select(all_of(MyVar_red)) |>
   corvif()
 
 # seems okay now, but maybe we can drop some terms later?
@@ -861,7 +849,7 @@ SeaPolygon <- st_difference(bb_sf, st_geometry(CroppedLithuania))
 ggplot() +
   geom_sf(data = st_sf(SeaPolygon),
           alpha = 0.5,
-          fill = "lightblue") + # Sea
+          fill = "gray80") + # Sea
   geom_sf(data = CroppedLithuania,
           fill = "transparent",
           color = "black") + # Land
@@ -886,7 +874,7 @@ SeaPolygon_UTM <- st_transform(x = SeaPolygon,
 ggplot() +
   geom_sf(data = st_sf(SeaPolygon_UTM),
           alpha = 0.5,
-          fill = "lightblue") + # Sea
+          fill = "gray80") + # Sea
   geom_sf(data = CroppedLithuania_UTM,
           fill = "transparent",
           color = "black") + # Land
@@ -954,11 +942,20 @@ df <- df |>
 )
 
 
-
-
 # Section 7: Execute the Poisson GLM----
 
 I1 <- inla(Counts ~ 1 + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                        agriculture.std + artificial.std + natural.std +
+                        year.std +
+                        waterbody_type,
+           control.compute = MyControlCompute,
+           control.predictor = MyControlPredictor,
+           quantiles = c(0.025, 0.975),
+           family = "poisson",
+           data = df)
+summary(I1)
+
+I1.2 <- inla(Counts ~ 1 + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
                         agriculture.std + artificial.std + natural.std +
                         f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
                         waterbody_type,
@@ -967,7 +964,7 @@ I1 <- inla(Counts ~ 1 + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
            quantiles = c(0.025, 0.975),
            family = "poisson",
            data = df)
-summary(I1)
+summary(I1.2)
 
 
 #' Fitted values from INLA:
@@ -980,7 +977,7 @@ df$E1.i1 <- (df$Counts - df$Fit.i1) / sqrt(df$Fit.i1)
 
 #* Subsection 7.1: Check the smoothers----
 #' Combine the three smoothers in I1C$summary.random
-MyData <- rbind(I1$summary.random$year)
+MyData <- rbind(I1.2$summary.random$year)
 head(MyData)
 
 
@@ -997,7 +994,7 @@ head(MyData)
 #'    When there are knots (covariates with the same value), only 1
 #'    value is estimated at that knot.
 #' To see this:
-NX <- c(nrow(I1$summary.random$year))
+NX <- c(nrow(I1.2$summary.random$year))
 NX #' Number of values per RW2 term.
 
 
@@ -1241,13 +1238,13 @@ p
 
 
 
-#* Subsection 8.7: Check for temporal dependency----
-# test temporal autocorrelation
-# Need to be careful here. plot the residuals vs year as a better option.
-# Or make a variagram with 1 dimension, year.
-res_time = recalculateResiduals(E1.sqr, group = df$year)
-testTemporalAutocorrelation(res_time, time = unique(df$year))
-# Fine
+# #* Subsection 8.7: Check for temporal dependency----
+# # test temporal autocorrelation
+# # Need to be careful here. plot the residuals vs year as a better option.
+# # Or make a variagram with 1 dimension, year.
+# res_time = recalculateResiduals(E1.sqr, group = df$year)
+# testTemporalAutocorrelation(res_time, time = unique(df$year))
+# # Fine
 
 
 
@@ -1520,14 +1517,14 @@ summary(Test)
 
 #' This output can be written as:
 #'  LogSR_i = 0.89550 + Residuals_i
-#'  Residual_i ~ N(0, 1.418^2)
+#'  Residual_i ~ N(0, 1.419^2)
 
 #' And this can be written as:
-#'   SR_i = exp(0.89550 + Residuals_i)
+#'   SR_i = exp(0.89291 + Residuals_i)
 #'
 #' It is actually a little bit more complicated (look up a
 #' lognormal distribution). But this gives an indication that
-#' the u_i ~ N(0, 1.418^2) would be a decent starting point.
+#' the u_i ~ N(0, 1.419^2) would be a decent starting point.
 #' Maybe we should be conservative, and use:
 #'  u_i ~ N(0, 2^2)
 
@@ -1633,21 +1630,24 @@ colnames(X)
 
 f1.lm <- Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
                        agriculture.std + artificial.std + natural.std +
-                       f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
+                       year.std +
+                       # f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
                        waterbody_type.L
 
 f2.mesh1 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
                            agriculture.std + artificial.std + natural.std +
-                           f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
+                           year.std +
+                           # f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
                            waterbody_type.L +
                            f(w, model = spde1)
 
 #' This is the model with spatial dependency, based on mesh 2.
 f2.mesh2 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
-                    agriculture.std + artificial.std + natural.std +
-                       f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
-                       waterbody_type.L +
-                       f(w, model = spde2)
+                           agriculture.std + artificial.std + natural.std +
+                           year.std +
+                         # f(year, model = "rw2", scale.model = TRUE, hyper = MyPCPrior, constr = TRUE) +
+                           waterbody_type.L +
+                           f(w, model = spde2)
 
 
 
@@ -1676,7 +1676,6 @@ I2.mesh2 <- inla(f2.mesh2,
                  data = inla.stack.data(Stack2),
                  control.compute = MyControlCompute,
                  control.predictor = list(A = inla.stack.A(Stack2)))
-
 
 
 #* Subsection 9.9: Compare the INLA models----
@@ -3139,17 +3138,17 @@ plotQQunif(E4.sqr, testUniformity = TRUE,
 
 #' Plot the scaled quantile residuals versus each covariate
 #' in the model.
-plotResiduals(E4.sqr, form = df$eqr)            #' okay
-plotResiduals(E4.sqr, form = df$ppt)            #' Fine
-plotResiduals(E4.sqr, form = df$tmin)           #' Fine
-plotResiduals(E4.sqr, form = df$ws)             #' Fine
-plotResiduals(E4.sqr, form = df$elevation)      #' Okay
-plotResiduals(E4.sqr, form = df$agriculture)    #' Fine
-plotResiduals(E4.sqr, form = df$artificial)     #' Fine
-plotResiduals(E4.sqr, form = df$natural)        #' Fine
-plotResiduals(E4.sqr, form = df$year)           #' Some trouble.
-plotResiduals(E4.sqr, form = df$year, asFactor = TRUE)           #' Some trouble.
-plotResiduals(E4.sqr, form = df$waterbody_type, asFactor = TRUE) #' Some trouble.
+plotResiduals(E4.sqr, form = df$eqr, quantreg = TRUE)            #' okay
+plotResiduals(E4.sqr, form = df$ppt, quantreg = TRUE)            #' Fine
+plotResiduals(E4.sqr, form = df$tmin, quantreg = TRUE)           #' Fine
+plotResiduals(E4.sqr, form = df$ws, quantreg = TRUE)             #' Fine
+plotResiduals(E4.sqr, form = df$elevation, quantreg = TRUE)      #' Okay
+plotResiduals(E4.sqr, form = df$agriculture, quantreg = TRUE)    #' Fine
+plotResiduals(E4.sqr, form = df$artificial, quantreg = TRUE)     #' Fine
+plotResiduals(E4.sqr, form = df$natural, quantreg = TRUE)        #' Fine
+plotResiduals(E4.sqr, form = df$year, quantreg = TRUE)           #' Some trouble.
+plotResiduals(E4.sqr, form = df$year, asFactor = TRUE, quantreg = TRUE)           #' Some trouble.
+plotResiduals(E4.sqr, form = df$waterbody_type, asFactor = TRUE, quantreg = TRUE) #' Some trouble.
 
 
 
@@ -3193,6 +3192,7 @@ p <- ggplot() +
   theme(legend.position = "none") +
   guides(fill = guide_legend(title = NULL)) +
   labs(title = "Residuals")
+p
 p + facet_grid(~waterbody_type)
 #' Spatial spatial patterns?
 
@@ -3214,7 +3214,7 @@ testSpatialAutocorrelation(res_space, groupLocations$Xkm, groupLocations$Ykm)
 
 #' Option 3: Make a variogram.
 #' Use scaled quantile residuals:
-df$E2 <- residuals(E4.sqr)
+df$E2 <- residuals(E4.sqr) # <-- better if you have zero inflation
 #' Make a sample variogram of the residuals.
 MyData <- data.frame(E2  = df$E2,
                      Xkm = df$Xkm,
@@ -3658,7 +3658,7 @@ NYears
 #' calculate a spatial random field. From knot to knot,
 #' we will impose the ar1 correlation. As an example:
 
-Knots <- seq(1, 10, by = 3)   #BUT THIS IS WRONG! See END OF FILE.
+Knots <- seq(1, 10, by = 1)   #BUT THIS IS WRONG! See END OF FILE.
 # should be Knots <- seq(1, 18, by = 3)   #BUT THIS IS WRONG! See END OF FILE.
 Knots
 
@@ -3697,7 +3697,7 @@ NGroups
 
 
 #' If you use:
-#' Knots <- seq(1, 10, by = 3)
+#' Knots <- seq(1, 10, by = 1)
 #' Then you will get a SRF in each year. Takes about 15 minutes on
 #' a fast computer.
 
@@ -3779,20 +3779,20 @@ f4 <-  Counts ~ -1 + Intercept + eqr.std + ppt.std + tmin.std + ws.std + elevati
 #' Computing time is about 5 minutes. You can also load our workspace;
 #' then you don't have to execute the following model. See the course
 #' website, or the code in Subsection 2.1.
-I4 <- inla(f4,
-           family = "nbinomial",
-           data = inla.stack.data(Stack4.ar1),
-           control.compute = MyControlCompute,
-           control.predictor = list(A = inla.stack.A(Stack4.ar1)),
-
-
-           #' Faster calculation:
-           control.inla = list(strategy = 'gaussian',
-                               int.strategy = 'eb')) # <--- remove these lines for more precision
+I4.precise <- inla(f4,
+                   family = "nbinomial",
+                   data = inla.stack.data(Stack4.ar1),
+                   control.compute = MyControlCompute,
+                   control.predictor = list(A = inla.stack.A(Stack4.ar1))) #,
+#'
+#'
+#'            #' Faster calculation:
+#'            control.inla = list(strategy = 'gaussian',
+#'                                int.strategy = 'eb')) # <--- remove these lines for more precision
 
 # comment that faster calculation part out if we want a more precise model.
 
-summary(I4)
+summary(I4.precise)
 #' Note that the rho is close to 1. That is a very high value,
 #' and indicates very slow changes over time. But we already
 #' knew that. This comes from "GroupRho for w" in the hyperparameters part
@@ -3805,14 +3805,15 @@ summary(I4)
 
 #' Compare DIC and WAIC.
 DICs <- c(I1$dic$dic, I2a$dic$dic, I2b$dic$dic, I3$dic$dic,
-          I4$dic$dic)
+          I4$dic$dic, I4.precise$dic$dic)
 WAICs <- c(I1$waic$waic, I2a$waic$waic, I2b$waic$waic, I3$waic$waic,
-           I4$waic$waic)
+           I4$waic$waic, I4.precise$waic$waic)
 Results <- data.frame(Models = c("NB GLM",
                                  "NB GLM + SRF with mesh2a",
                                  "NB GLM + SRF with mesh2b",
                                  "NB GLM + replicate SRF",
-                                 "NB GLM + ar1 SRF"),
+                                 "NB GLM + ar1 SRF",
+                                 "NB GLM + ar1 SRF (precise)"),
                       DIC = DICs,
                       WAIC = WAICs)
 Results
@@ -3824,12 +3825,12 @@ Results
 
 
 #' Numerical output for the regression parameters.
-BetasI4 <- I4$summary.fixed[, c("mean", "0.025quant", "0.975quant")]
+BetasI4 <- I4.precise$summary.fixed[, c("mean", "0.025quant", "0.975quant")]
 print(BetasI4, digits = 2)
 
 
 #' Posterior mean of theta (as in: mu + mu^2 / theta)
-theta.pd <- I4$marginals.hyperpar$`size for the nbinomial observations (1/overdispersion)`
+theta.pd <- I4.precise$marginals.hyperpar$`size for the nbinomial observations (1/overdispersion)`
 theta.pm <- inla.emarginal(function(x) x, theta.pd)
 theta.pm
 
@@ -3871,7 +3872,7 @@ ggplot(BetasI4_df, aes(x = Mean, y = Covariate)) +
 #' show the SRF for that specific year.
 
 #' The posterior mean values can be obtained via:
-w.pm <- I4$summary.random$w$mean
+w.pm <- I4.precise$summary.random$w$mean
 length(w.pm)
 
 
@@ -3929,7 +3930,7 @@ for (i in 1:NGroups){
   MyData$w.pm[!OnLand] <- NA
 
   #'  5. Store the MyData$w.pm in MyData.All
-  #MyData$Year <- NamesYear[i]
+  MyData$Year <- NamesYear[i]
   MyData$Knots <- NamesKnots[i]
   MyData.All  <- rbind(MyData.All,
                        MyData)
@@ -3937,6 +3938,7 @@ for (i in 1:NGroups){
 
 #' Add year as a factor for facetting in ggplot.
 MyData.All$fKnots <- factor(MyData.All$Knots)
+MyData.All$fYear <- factor(MyData.All$Year)
 
 
 
@@ -3944,7 +3946,7 @@ MyData.All$fKnots <- factor(MyData.All$Knots)
 ggplot() +
   geom_sf(data = st_sf(SeaPolygon_UTM),
           alpha = 0.5,
-          fill = "lightblue") + # Sea
+          fill = "gray80") + # Sea
   geom_sf(data = CroppedLithuania_UTM,
           fill = "transparent",
           color = "black") + # Land
@@ -3966,11 +3968,11 @@ ggplot() +
              aes(x = Xkm, y = Ykm),
              size = 0.1,
              alpha = 0.5) +
-  facet_wrap(~ fKnots, ncol = 3)
+  facet_wrap(~ fYear, ncol = 3)
 
 #' From year-to-year the SRF is changing slowly.
 #' That is because the rho is relativel high.
-summary(I4)
+summary(I4.precise)
 
 
 
@@ -4038,7 +4040,7 @@ summary(I4)
 
 
 #' Do the posterior simulation of regression parameters 1000 times.
-SimData <- inla.posterior.sample(n = 1000, I4)
+SimData <- inla.posterior.sample(n = 1000, I4.precise)
 
 
 #' Here is some fancy code to grab the positions of specific variables.
@@ -4052,7 +4054,7 @@ MyGrep <- function(x, SimulatedData){
 
 
 #' What are the names of the regression parameters?
-BetasInModel <- rownames(I4$summary.fixed)
+BetasInModel <- rownames(I4.precise$summary.fixed)
 
 #' Get their location in the object with simulation results.
 BetaNames    <- unlist(lapply(BetasInModel,
@@ -4120,7 +4122,7 @@ par(mfrow = c(1,1))
 #' Now we have 1000 simulated data sets. Give them all to
 #' DHARMa, and it will calculate scaled quantile residuals.
 N <- nrow(df)
-df$Fit <- I4$summary.fitted.values[1:N, "mean"]  #' Fitted values.
+df$Fit <- I4.precise$summary.fitted.values[1:N, "mean"]  #' Fitted values.
 
 E5.sqr <- createDHARMa(simulatedResponse = Ysim,
                        observedResponse = df$Counts,
@@ -4162,17 +4164,17 @@ plotQQunif(E5.sqr, testUniformity = TRUE,
 
 #' Plot the scaled quantile residuals versus each covariate
 #' in the model.
-plotResiduals(E5.sqr, form = df$eqr)            #' okay <- quantreg = T <- force it
-plotResiduals(E5.sqr, form = df$ppt)            #' Fine
-plotResiduals(E5.sqr, form = df$tmin)           #' Fine
-plotResiduals(E5.sqr, form = df$ws)             #' Fine
-plotResiduals(E5.sqr, form = df$elevation)      #' Okay
-plotResiduals(E5.sqr, form = df$agriculture)    #' Fine
-plotResiduals(E5.sqr, form = df$artificial)     #' Fine
-plotResiduals(E5.sqr, form = df$natural)        #' Fine
-plotResiduals(E5.sqr, form = df$year)           #' Some trouble.
-plotResiduals(E5.sqr, form = df$year, asFactor = TRUE)           #' Some trouble.
-plotResiduals(E5.sqr, form = df$waterbody_type, asFactor = TRUE) #' Some trouble.
+plotResiduals(E5.sqr, form = df$eqr, quantreg = TRUE)            #' okay <- quantreg = T <- force it
+plotResiduals(E5.sqr, form = df$ppt, quantreg = TRUE)            #' Fine
+plotResiduals(E5.sqr, form = df$tmin, quantreg = TRUE)           #' Fine
+plotResiduals(E5.sqr, form = df$ws, quantreg = TRUE)             #' Fine
+plotResiduals(E5.sqr, form = df$elevation, quantreg = TRUE)      #' Okay
+plotResiduals(E5.sqr, form = df$agriculture, quantreg = TRUE)    #' Fine
+plotResiduals(E5.sqr, form = df$artificial, quantreg = TRUE)     #' Fine
+plotResiduals(E5.sqr, form = df$natural, quantreg = TRUE)        #' Fine
+plotResiduals(E5.sqr, form = df$year, quantreg = TRUE)           #' Some trouble.
+plotResiduals(E5.sqr, form = df$year, asFactor = TRUE, quantreg = TRUE)           #' Some trouble.
+plotResiduals(E5.sqr, form = df$waterbody_type, asFactor = TRUE, quantreg = TRUE) #' Some trouble.
 
 E5.sqr$scaledResiduals
 # actual residuals that we can use for the gam trick
@@ -4300,19 +4302,24 @@ ggplot() +
 Out2 <- I1$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 Out2.mesh1 <- I2a$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 Out2.mesh2 <- I2b$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
+Out2.mesh2ar1 <- I4$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
+Out2.mesh2ar1.precise <- I4.precise$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 rownames(Out2)       <- I1$names.fixed
 rownames(Out2.mesh1) <- I2a$names.fixed
 rownames(Out2.mesh2) <- I2b$names.fixed
-
+rownames(Out2.mesh2ar1) <- I4$names.fixed
+rownames(Out2.mesh2ar1.precise) <- I4.precise$names.fixed
 
 #' Names for the models:
 MyNames <- c("NB GLM",
              "Spatial NB GLM mesh 1",
-             "Spatial NB GLM mesh 2")
+             "Spatial NB GLM mesh 2",
+             "Spatial NB GLM mesh 1 ar1",
+             "Spatial NB GLM mesh 1 ar1 (precise)")
 
 #' Compare results of the two models using MyCompareBetasofModels
 #' (which is in our support file).
-MyCompareBetasofModels(AllModels = list(Out2, Out2.mesh1, Out2.mesh2),
+MyCompareBetasofModels(AllModels = list(Out2, Out2.mesh1, Out2.mesh2, Out2.mesh2ar1, Out2.mesh2ar1.precise),
                        ModelNames = MyNames)
 
 #' Let's plot the results of the model, without and with the
@@ -4322,11 +4329,13 @@ Out2.mesh1 <- I2a$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 Out2.mesh2 <- I2b$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 Out2.mesh1.repYear <- I3$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 Out2.mesh1.ar1Year <- I4$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
+Out2.mesh1.ar1Year.precise <- I4.precise$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 rownames(Out2)       <- I1$names.fixed
 rownames(Out2.mesh1) <- I2a$names.fixed
 rownames(Out2.mesh2) <- I2b$names.fixed
 rownames(Out2.mesh1.repYear) <- I3$names.fixed
 rownames(Out2.mesh1.ar1Year) <- I4$names.fixed
+rownames(Out2.mesh1.ar1Year.precise) <- I4.precise$names.fixed
 
 
 #' Names for the models:
@@ -4334,11 +4343,12 @@ MyNames <- c("NB GLM",
              "Spatial NB GLM mesh 1",
              "Spatial NB GLM mesh 2",
              "Spatial NB GLM mesh 1 with rep ST term",
-             "Spatial NB GLM mesh 1 with AR1 ST term")
+             "Spatial NB GLM mesh 1 with AR1 ST term",
+             "Spatial NB GLM mesh 1 with AR1 ST term (precise)")
 
 #' Compare results of the two models using MyCompareBetasofModels
 #' (which is in our support file).
-MyCompareBetasofModels(AllModels = list(Out2, Out2.mesh1, Out2.mesh1, Out2.mesh1.repYear, Out2.mesh1.ar1Year),
+MyCompareBetasofModels(AllModels = list(Out2, Out2.mesh1, Out2.mesh1, Out2.mesh1.repYear, Out2.mesh1.ar1Year, Out2.mesh1.ar1Year.precise),
                        ModelNames = MyNames)
 
 #' There are some differences between the model without, and with
@@ -4352,6 +4362,7 @@ I2a$summary.hyperpar[1, "mean"]
 I2b$summary.hyperpar[1, "mean"]
 I3$summary.hyperpar[1, "mean"]
 I4$summary.hyperpar[1, "mean"]
+I4.precise$summary.hyperpar[1, "mean"]
 
 
 # Section 26: Prediction----
@@ -4364,7 +4375,7 @@ I4$summary.hyperpar[1, "mean"]
 #' Here are the results (again).
 
 #' Posterior mean values and 95% CI for the regression parameters:
-BetaFinal <- I4$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
+BetaFinal <- I4.precise$summary.fixed[,c("mean", "0.025quant", "0.975quant")]
 print(BetaFinal, digits = 2)
 
 #' Visualise the betas using ggplot2.
@@ -4398,7 +4409,7 @@ ggplot(BetaFinal_df, aes(x = Mean, y = Covariate)) +
 # get a bit smaller, making the differences between lakes and rivers statistically important.
 
 #' Here is the posterior mean of the theta:
-theta.pd <- I4$marginals.hyperpar$`size for the nbinomial observations (1/overdispersion)`
+theta.pd <- I4.precise$marginals.hyperpar$`size for the nbinomial observations (1/overdispersion)`
 theta.pm <- inla.emarginal(function(x) x, theta.pd)
 round(theta.pm, digits = 2)
 BetaFinal_df
@@ -4423,19 +4434,21 @@ BetaFinal_df
 
 #' Recall that this is the mesh:
 p1 <- ggplot() +
-         geom_sf(data = CroppedLithuania_UTM, fill = "lightblue") +
+         geom_sf(data = CroppedLithuania_UTM, fill = "grey80") +
          geom_point(data = df,
                     aes(x = Xkm, y = Ykm),
                     col = grey(0.2),
-                    size = 0.5,
+                    size = 1,
                     alpha = 0.5) +
          theme_minimal()
 p1
 
 #' Suppose that we want to predict for
 #' the red point (it is a new point)
-MyData2 <- data.frame(Xkm = mean(df$Xkm),
-                      Ykm = mean(df$Ykm) + 0.3)
+# MyData2 <- data.frame(Xkm = mean(df$Xkm),
+#                       Ykm = mean(df$Ykm) + 0.3)
+MyData2 <- data.frame(Xkm = 830,
+                      Ykm = 6175)
 p1 + geom_point(data = MyData2,
                 aes(x = Xkm,
                     y = Ykm),
@@ -4454,15 +4467,16 @@ MyData2
 #' sake of this example, we pretend that we know all the
 #' covariate values at the red site:
 
-MyData2$TreeHeight.std     <- -0.5
-MyData2$Distance2Edge.std  <- -0.25
-MyData2$NearestTallOak.std <-  0
-MyData2$HerbCover.std      <-  0.3
-MyData2$fNLowBranches <- factor("Low", levels = levels(BF$fNLowBranches))
-MyData2$fShelter      <- factor("Low", levels = levels(BF$fShelter))
-MyData2$fBuckthorn    <- factor("Low", levels = levels(BF$fBuckthorn))
-MyData2$fBramble      <- factor("Low", levels = levels(BF$fBramble))
-MyData2$fSmallOak     <- factor("High", levels = levels(BF$fSmallOak))
+MyData2$eqr.std              <- mean(df$eqr.std)
+MyData2$ppt.std              <- mean(df$ppt.std)
+MyData2$tmin.std             <- mean(df$tmin.std)
+MyData2$ws.std               <- mean(df$ws.std)
+MyData2$elevation.std        <- mean(df$elevation.std)
+MyData2$agriculture.std      <- mean(df$agriculture.std)
+MyData2$artificial.std       <- mean(df$artificial.std)
+MyData2$natural.std          <- mean(df$natural.std)
+MyData2$year.std             <- (2023 - mean(df$year)) / sd(df$year)
+MyData2$waterbody_type.L     <- factor("Lake", levels = levels(df$waterbody_type))
 
 #' In other words, we pretend that at the red site we have the following
 #' covariate conditions:
@@ -4482,11 +4496,10 @@ MyData2
 
 #' 2. Make a stack for the data for which predictions are needed.
 #' For these covariate conditions, we make an X matrix for prediction:
-Xp <- model.matrix(~ TreeHeight.std + Distance2Edge.std +
-                     NearestTallOak.std + HerbCover.std +
-                     fNLowBranches + fShelter + fBuckthorn +
-                     fBramble + fSmallOak,
-                  data = MyData2)
+Xp <- model.matrix(~ eqr.std + ppt.std + tmin.std + ws.std + elevation.std +
+                     agriculture.std + artificial.std + natural.std +
+                     year.std + waterbody_type.L,
+                     data = MyData2)
 Xp <- as.data.frame(Xp)
 Xp
 
@@ -4496,7 +4509,7 @@ Xp
 
 StackPred <- inla.stack(
                tag = "Predict",
-               data = list(NEggs = NA),
+               data = list(vec_abund = NA),
                A = list(1, 1),
                effects = list(
                Intercept = rep(1, nrow(Xp)),  #' Intercept
@@ -4513,35 +4526,35 @@ StackPred <- inla.stack(
 #' (you can easily add more).
 LocPred <- MyData2[, c("Xkm", "Ykm")] #' Give coordinates to inla.spde.make.A()
 LocPred <- as.matrix(LocPred)         #' Has to be a matrix to avoid error.
-A3.Pred <- inla.spde.make.A(mesh3, loc = LocPred)
+A3.Pred <- inla.spde.make.A(mesh2a, loc = LocPred)
 dim(A3.Pred)  #' 1 row and 2018 vertices
 
 
 #' This is our stack for prediction:  exp(Intercept + Xp * beta + A3.Pred * w)
 StackPred <- inla.stack(
   tag = "Predict",
-  data = list(NEggs = NA),
+  data = list(vec_abund = NA),
   A = list(1, 1, A3.Pred),
   effects = list(
     Intercept = rep(1, nrow(Xp)),  #' Intercept.
     Xp        = Xp[,-1],           #' Covariates for prediction.
-    w         = w3.index))         #' w's from mesh 3.
+    w         = w2a.index))        #' w's from mesh 3.
 
 
 
 #' 3. Combine the two stacks.
-All.stacks <- inla.stack(Stack3, StackPred)
+All.stacks <- inla.stack(Stack2a, StackPred)
 
 
 
 #' 4. Run INLA with the combined stack.
 #' This is the spatial NB GLM based on mesh 3.
-Pred2.mesh3 <- inla(f2.mesh3,
-                 family = "nbinomial",
-                 data = inla.stack.data(All.stacks),
-                 control.compute = MyControlCompute,
-                 control.predictor = list(link = 1,
-                                          A = inla.stack.A(All.stacks)))
+Pred2.mesh2a <- inla(f2a, # formula from mesh2a model
+                     family = "nbinomial",
+                     data = inla.stack.data(All.stacks),
+                     control.compute = MyControlCompute,
+                     control.predictor = list(link = 1,
+                                     A = inla.stack.A(All.stacks)))
 
 #' The link = 1 will ensure that the exp() is applied for the
 #' predicted values.
@@ -4561,8 +4574,8 @@ index.Pred <- inla.stack.index(All.stacks, tag = "Predict")$data
 
 
 #' These allow us to extract the correct rows:
-Fit2.fit  <- Pred2.mesh3$summary.fitted.values[index.Fit, c(1,3,5)]   #' 245  by 3
-Fit2.pred <- Pred2.mesh3$summary.fitted.values[index.Pred, c(1,3,5)]  #' 100 by 3
+Fit2.fit  <- Pred2.mesh2a$summary.fitted.values[index.Fit, c(1,3,5)]   #' 245  by 3
+Fit2.pred <- Pred2.mesh2a$summary.fitted.values[index.Pred, c(1,3,5)]  #' 100 by 3
 
 
 #' It is the second one we need as these are for the covariate values in
@@ -4589,6 +4602,7 @@ MyData2
 # Section 27: Clean up----
 
 library(pacman)
+
 # Clear data
 rm(list = ls())  # Removes all objects from environment
 # Free unused memory
